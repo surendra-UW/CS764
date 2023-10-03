@@ -1,3 +1,5 @@
+#include <iostream>
+#include <random>
 #include "Scan.h"
 #include "RecordStructure.h"
 // #include <string>
@@ -36,17 +38,23 @@ bool ScanIterator::next()
 {
 	TRACE(true);
 
-	printf("Where is this invoked?");
 	if (_count >= _plan->_count)
 		return false;
 
 	RecordStructure rs;
-	rs.member1 = 1;
-	rs.member2 = 2;
-	rs.member3 = 3;
-	char text[20] = "dummy test ";
 
-	// std::ofstream outputFile("data.txt", std::ios::app);
+	// Create a random number generator engine and seed it
+	std::random_device rd;
+	std::mt19937 gen(rd());
+
+	// Define distributions for random values within specific ranges
+	std::uniform_int_distribution<int> distribution(std::numeric_limits<int>::min(), std::numeric_limits<int>::max()); // Adjust range as needed
+
+	// Generate random values for the structure members
+	rs.member1 = distribution(gen);
+	rs.member2 = distribution(gen);
+	rs.member3 = distribution(gen);
+
 	FILE *outputFile = std::fopen("data.txt", "a");
 	if (!outputFile)
 	{
@@ -55,8 +63,6 @@ bool ScanIterator::next()
 		return 1;
 	}
 
-	// Append the struct to the file
-	// std::fwrite(&text, sizeof(text), 1, outputFile);
 	fprintf(outputFile, "%d,%d,%d\n", rs.member1, rs.member2, rs.member3);
 
 	std::fclose(outputFile);
