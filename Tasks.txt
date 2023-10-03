@@ -17,11 +17,11 @@ Test with 0, 1, 2, 3, 10, 29, 100, 576, 1000 rows
 /*
 
 0. G++ setup
-1. Structure of record - 3 fields
+1. Structure of record - 3 fields - Done
 2. Scan Iterator we generate the number of records specified in the slide 
-    define parameters
-3. Write it to a file
-4. Generate Random values
+    define parameters - Done
+3. Write it to a file - Done
+4. Generate Random values - Done
 5. Load file and sort using merge sort algo
 
 */
