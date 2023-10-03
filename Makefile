@@ -52,4 +52,7 @@ co :
 	co $(REV) -l $(HDRS) $(SRCS) $(DOCS) $(SCRS)
 
 clean :
-	@rm -f $(OBJS) Test.exe Test.exe.stackdump trace
+	@rm -f $(OBJS) data.txt Test.exe Test.exe.stackdump trace
+
+run: Test.exe
+	./Test.exe
