@@ -1,6 +1,4 @@
-// mystruct.h
-#ifndef RECORDSTRUCTURE_H
-#define RECORDSTRUCTURE_H
+#pragma once
 
 struct RecordStructure
 {
@@ -10,4 +8,3 @@ struct RecordStructure
     // Add other members as needed
 };
 
-#endif
