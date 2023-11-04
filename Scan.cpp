@@ -52,27 +52,27 @@ bool ScanIterator::next()
 	std::mt19937 gen(rd());
 
 	// Define distributions for random values within specific ranges
-	// uniform_int_distribution<unsigned long long> distribution(RANDMIN, RANDMAX); // Adjust range as needed
+	uniform_int_distribution<unsigned long long> distribution(RANDMIN, RANDMAX); // Adjust range as needed
 
 	// Generate random values for the structure members
-	// rs.member1 = distribution(gen);
-	// rs.member2 = distribution(gen);
-	// rs.member3 = distribution(gen);
-	// rs.member4 = distribution(gen);
+	rs.member1 = distribution(gen);
+	rs.member2 = distribution(gen);
+	rs.member3 = distribution(gen);
+	rs.member4 = distribution(gen);
 	
-	// FILE *outputFile = std::fopen("HDD.txt", "a");
-	// if (!outputFile)
-	// {
-	// 	printf("Error opening file for appending.");
-	// 	// << std::endl;
-	// 	return 1;
-	// }
+	FILE *outputFile = std::fopen("HDD.txt", "a");
+	if (!outputFile)
+	{
+		printf("Error opening file for appending.");
+		// << std::endl;
+		return 1;
+	}
 
-	// fprintf(outputFile, "%llu,%llu,%llu,%llu\n", rs.member1, rs.member2, rs.member3, rs.member4);
+	fprintf(outputFile, "%llu,%llu,%llu,%llu\n", rs.member1, rs.member2, rs.member3, rs.member4);
 
-	// std::fclose(outputFile);
+	std::fclose(outputFile);
 
-	// printf("Struct %d appended to file.", _count);
+	printf("Struct %d appended to file.", _count);
 	++_count;
 	return true;
 } // ScanIterator::next
