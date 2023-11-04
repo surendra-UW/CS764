@@ -3,7 +3,11 @@
 #include "Scan.h"
 #include "RecordStructure.h"
 // #include <string>
+
+#define RANDMIN 100000000000
+#define RANDMAX 999999999999
 using namespace std;
+
 
 ScanPlan::ScanPlan(RowCount const count) : _count(count)
 {
@@ -48,26 +52,27 @@ bool ScanIterator::next()
 	std::mt19937 gen(rd());
 
 	// Define distributions for random values within specific ranges
-	std::uniform_int_distribution<int> distribution(std::numeric_limits<int>::min(), std::numeric_limits<int>::max()); // Adjust range as needed
+	// uniform_int_distribution<unsigned long long> distribution(RANDMIN, RANDMAX); // Adjust range as needed
 
 	// Generate random values for the structure members
-	rs.member1 = distribution(gen);
-	rs.member2 = distribution(gen);
-	rs.member3 = distribution(gen);
+	// rs.member1 = distribution(gen);
+	// rs.member2 = distribution(gen);
+	// rs.member3 = distribution(gen);
+	// rs.member4 = distribution(gen);
+	
+	// FILE *outputFile = std::fopen("HDD.txt", "a");
+	// if (!outputFile)
+	// {
+	// 	printf("Error opening file for appending.");
+	// 	// << std::endl;
+	// 	return 1;
+	// }
 
-	FILE *outputFile = std::fopen("data.txt", "a");
-	if (!outputFile)
-	{
-		printf("Error opening file for appending.");
-		// << std::endl;
-		return 1;
-	}
+	// fprintf(outputFile, "%llu,%llu,%llu,%llu\n", rs.member1, rs.member2, rs.member3, rs.member4);
 
-	fprintf(outputFile, "%d,%d,%d\n", rs.member1, rs.member2, rs.member3);
+	// std::fclose(outputFile);
 
-	std::fclose(outputFile);
-
-	printf("Struct %d appended to file.", _count);
+	// printf("Struct %d appended to file.", _count);
 	++_count;
 	return true;
 } // ScanIterator::next

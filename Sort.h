@@ -17,8 +17,12 @@ public:
 	SortIterator (SortPlan const * const plan);
 	~SortIterator ();
 	bool next ();
+    bool internalSort();
+	bool copyRamToHDD();
+
 private:
 	SortPlan const * const _plan;
 	Iterator * const _input;
 	RowCount _consumed, _produced;
+	int _recsize;
 }; // class SortIterator
