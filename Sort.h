@@ -1,4 +1,5 @@
 #include "Iterator.h"
+typedef uint32_t uint;
 
 class SortPlan : public Plan
 {
@@ -19,6 +20,10 @@ public:
 	bool next ();
     bool internalSort();
 	bool copyRamToHDD();
+    void clearRam();
+    int externalMerge();
+    void initRamMem(uint blockSize, int step);
+    bool loadRamBlocks(int partition,  int ramOffset, int hddOffset, uint blockSize, int step);
 
 private:
 	SortPlan const * const _plan;
