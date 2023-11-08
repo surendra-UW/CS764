@@ -2,9 +2,10 @@
 
 struct RecordStructure
 {
-    int member1;
-    int member2;
-    int member3;
+    uint64_t member1;
+    uint64_t member2;
+    uint64_t member3;
+    uint64_t member4;
     // Add other members as needed
 };
 

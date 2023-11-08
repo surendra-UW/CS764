@@ -1,9 +1,12 @@
+#include <string>
 #include "Buffer.h"
 #include "RecordStructure.h"
 using namespace std;
 
-Buffer::Buffer(int bufferSize) : size(bufferSize), head(0), tail(0) {
+Buffer::Buffer(int bufferSize, bool inputBuffer, string hierarchy) : size(bufferSize), head(0), tail(0) {
     data = new RecordStructure[size];
+    inputBuffer = inputBuffer;
+    hierarchy = hierarchy;
 }
 
 Buffer::~Buffer() {
@@ -23,6 +26,8 @@ bool Buffer::write(RecordStructure value) {
         data[head] = value;
         head = (head + 1) % size;
         return true;
+    } else {
+        evict(hierarchy);
     }
     return false; // Buffer is full
 }
@@ -32,6 +37,8 @@ bool Buffer::read(RecordStructure &value) {
         value = data[tail];
         tail = (tail + 1) % size;
         return true;
+    } else{
+        load(hierarchy);
     }
     return false; // Buffer is empty
 }
