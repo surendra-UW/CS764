@@ -2,72 +2,78 @@
 #include <fstream>
 #include <string>
 #include "Sort.h"
+#include "TournamentTree.h"
 using namespace std;
-#define DRAM_BYTES 10*1024*1024
-#define HDD_PAGE_SIZE 1024*1024
+#define CACHE_BYTES 512
+#define DRAM_BYTES 10 * 1024 * 1024
+#define HDD_PAGE_SIZE 1024 * 1024
 #define NWAY_MERGE 8
 
-SortPlan::SortPlan (Plan * const input) : _input (input)
+SortPlan::SortPlan(Plan *const input) : _input(input)
 {
-	TRACE (true);
+	TRACE(true);
 } // SortPlan::SortPlan
 
-SortPlan::~SortPlan ()
+SortPlan::~SortPlan()
 {
-	TRACE (true);
+	TRACE(true);
 	delete _input;
 } // SortPlan::~SortPlan
 
-Iterator * SortPlan::init () const
+Iterator *SortPlan::init() const
 {
-	TRACE (true);
-	return new SortIterator (this);
+	TRACE(true);
+	return new SortIterator(this);
 } // SortPlan::init
 
-SortIterator::SortIterator (SortPlan const * const plan) :
-	_plan (plan), _input (plan->_input->init ()),
-	_consumed (0), _produced (0), _recsize(0)
+SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(plan->_input->init()),
+														 _consumed(0), _produced(0), _recsize(0)
 {
-	TRACE (true);
-	while (_input->next ())  ++ _consumed;
+	TRACE(true);
+	while (_input->next())
+		++_consumed;
 	delete _input;
 
-	ifstream inputFile("HDD.txt", ios::binary|ios::end);
-	if(!inputFile) {
-		cout<< "cannot open the hard disk"<<endl; 
+	ifstream inputFile("HDD.txt", ios::binary | ios::end);
+	if (!inputFile)
+	{
+		cout << "cannot open the hard disk" << endl;
 		exit(1);
 	}
 	streampos curr = inputFile.tellg();
-	_recsize = curr/_consumed;
+	_recsize = curr / _consumed;
 	inputFile.close();
 	internalSort();
-	traceprintf ("consumed %lu rows\n",
-			(unsigned long) (_consumed));
+	traceprintf("consumed %lu rows\n",
+				(unsigned long)(_consumed));
 } // SortIterator::SortIterator
 
-SortIterator::~SortIterator ()
+SortIterator::~SortIterator()
 {
-	TRACE (true);
+	TRACE(true);
 
-	traceprintf ("produced %lu of %lu rows\n",
-			(unsigned long) (_produced),
-			(unsigned long) (_consumed));
+	traceprintf("produced %lu of %lu rows\n",
+				(unsigned long)(_produced),
+				(unsigned long)(_consumed));
 } // SortIterator::~SortIterator
 
-//external sort
-bool SortIterator::next ()
+// external sort
+bool SortIterator::next()
 {
-	TRACE (true);
-	if (_produced >= _consumed)  return false;
-	
+	TRACE(true);
+	if (_produced >= _consumed)
+		return false;
+
 	externalMerge();
 	return false;
 } // SortIterator::next
 
-bool SortIterator:: internalSort() {
+bool SortIterator::internalSort()
+{
 	ifstream inputFile("HDD.txt", ios::beg);
-	if(!inputFile) {
-		cout<< "cannot open the hard disk"<<endl;
+	if (!inputFile)
+	{
+		cout << "cannot open the hard disk" << endl;
 		return 1;
 	}
 	int run = 0;
@@ -79,103 +85,150 @@ bool SortIterator:: internalSort() {
 		{
 			block_left = DRAM_BYTES;
 		}
-		//should we load 1Mb at a time ???
+		// should we load 1Mb at a time ???
 		block_left = RoundDown(block_left, _recsize);
 		int read_size = RoundDown(HDD_PAGE_SIZE, _recsize);
 		while (block_left > 0)
 		{
 			char data[read_size];
-			int read_block = block_left / read_size > 0 ? read_size: block_left;
+			int read_block = block_left / read_size > 0 ? read_size : block_left;
 			inputFile.read(data, read_block);
 			_produced = _produced + read_block / _recsize;
-			outputFile.write(data, read_block);	
+			outputFile.write(data, read_block);
 			block_left = block_left - read_block;
 		}
 		outputFile.close();
-		//TODO: internal sort usig ram data
-		if(!copyRamToHDD()) exit(1);
+		// TODO: internal sort usig ram data
+		if (!copyRamToHDD())
+			exit(1);
 	}
 	_produced = 0;
 	inputFile.close();
 }
 
-bool SortIterator:: copyRamToHDD() {
+bool SortIterator::copyRamToHDD()
+{
 	ifstream inputFile("DRAM.txt");
-    ofstream outputHDDFile("HDD2.txt", ios::app);
-	if(inputFile.is_open() && outputHDDFile.is_open()) {
-		outputHDDFile<<inputFile.rdbuf();
+	ofstream outputHDDFile("HDD2.txt", ios::app);
+	if (inputFile.is_open() && outputHDDFile.is_open())
+	{
+		outputHDDFile << inputFile.rdbuf();
 		inputFile.close();
 		outputHDDFile.close();
 		clearRam();
-	} else {
-		cout<<"cannot open files to evict ram"<<endl;
+	}
+	else
+	{
+		cout << "cannot open files to evict ram" << endl;
 		return false;
 	}
 	return true;
 }
-void SortIterator::clearRam() {
+void SortIterator::clearRam()
+{
 	ofstream clearRAM("DRAM.txt", ofstream::trunc);
 	clearRAM.close();
 }
 
-int SortIterator:: externalMerge() {
+void SortIterator::mergeCacheData()
+{
+	int recordsInEachBatch = divide(CACHE_BYTES, _recsize);
+	int totalSteps = divide(recordsInEachBatch, CACHE_BYTES);
+	// totalSteps -> total number of records in a run
+	uint cacheOffsets[NWAY_MERGE + 1] = {0};
+	uint ramOffsets[NWAY_MERGE + 1] = {0};
+	int cachePartitionSizeInBytes = RoundDown(CACHE_BYTES / (NWAY_MERGE + 1), _recsize);
+	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES, _recsize);
+
+	for (int step = 0; step < totalSteps; step++)
+	{
+		initCacheMem(cachePartitionSizeInBytes, step + 1);
+	}
+
+	// externalSort("CACHE.txt", "CACHE_SORTED_TEST.txt", NWAY_MERGE, totalSteps);
+}
+
+int SortIterator::externalMerge()
+{
 	int recordsInEachBatch = divide(DRAM_BYTES, _recsize);
-	int steps = divide(recordsInEachBatch, NWAY_MERGE);
-	uint ramOffsets[NWAY_MERGE+1] = {0};
-	uint hddOffsets[NWAY_MERGE+1] = {0};
-	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES/(NWAY_MERGE+1), _recsize);
+	int totalSteps = divide(recordsInEachBatch, NWAY_MERGE);
+	// totalSteps -> total number of records in a run
+	uint ramOffsets[NWAY_MERGE + 1] = {0};
+	uint hddOffsets[NWAY_MERGE + 1] = {0};
+	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES / (NWAY_MERGE + 1), _recsize);
 	int hddPartitionSizeInBytes = RoundDown(HDD_PAGE_SIZE, _recsize);
-	for(int i=0;i<steps; i++) {
-		initRamMem(ramPartitionSizeInBytes, i+1);
+	for (int step = 0; step < totalSteps; step++)
+	{
+		initRamMem(ramPartitionSizeInBytes, step + 1);
+		break;
 		/*
-		load data from ram to cache and sort 
+		load data from ram to cache and sort
 		//TODO: tournament tree logic
 		when any of the cache buffer is empty load from ram
+		1. Will the input of the tournament tree be sort arrays within a run?
 		*/
-
 	}
-
+	// mergeCacheData();
 }
 
-void SortIterator::initRamMem(uint blockSize, int step) {
-	for(int i=0;i<NWAY_MERGE;i++){
-		loadRamBlocks(i, 0, 0, blockSize, step);
-	}
-}
-
-bool SortIterator::loadRamBlocks(int partition, int ramOffset, int hddOffset, uint blockSize, int step)
+void SortIterator::initCacheMem(uint blockSize, int step)
 {
-	//if hddOffset reaches limit return false
-	ofstream ram("DRAM.txt");
-	ifstream inputFile("HDD2.txt");
-	if(!ram.is_open() || !inputFile.is_open()) {
-		cout<<"failed to load data from Hdd"<<endl;
+	for (int i = 0; i < NWAY_MERGE; i++)
+	{
+		loadDataBlocks(i, 0, 0, blockSize, step, "CACHE.txt", "DRAM.txt", CACHE_BYTES, DRAM_BYTES);
+	}
+}
+
+void SortIterator::initRamMem(uint blockSize, int step)
+{
+	for (int i = 0; i < NWAY_MERGE; i++)
+	{
+		loadDataBlocks(i, 0, 0, blockSize, step, "DRAM.txt", "HDD2.txt", DRAM_BYTES, HDD_PAGE_SIZE);
+	}
+}
+
+bool SortIterator::loadDataBlocks(int partition, int writeToHierarchyOffset, int readFromHierarchyOffset, uint blockSize, int step, string writeToHierarchy, string readFromHierarchy, int writeToHierarchyBytes, int readFromHierarchyPageSize)
+{
+	// if readFromLevelOffset reaches limit return false
+	ofstream writeToHierarchyFile(writeToHierarchy, ios::app);
+	ifstream readFromHierarchyFile(readFromHierarchy);
+	if (!writeToHierarchyFile.is_open() || !readFromHierarchyFile.is_open())
+	{
+		cout << "failed to load data from " << readFromHierarchy << endl;
 		TRACE(true);
 		exit(1);
 	}
-	streamoff ramPartitionSizeInBytes = RoundDown(DRAM_BYTES / (NWAY_MERGE + 1), _recsize);
-	streamoff hddPartitionSizeInBytes = RoundDown(DRAM_BYTES, _recsize)*step;
-	if (partition > 0 || ramOffset > 0)
+	streamoff writeToHierarchyPartitionSizeInBytes = RoundDown(writeToHierarchyBytes / (NWAY_MERGE + 1), _recsize);
+	streamoff readFromHierarchyPartitionSizeInBytes = RoundDown(writeToHierarchyBytes, _recsize) * step;
+	if (partition > 0 || writeToHierarchyOffset > 0)
 	{
-		ram.seekp(partition * ramPartitionSizeInBytes + ramOffset, ios::beg);
+		writeToHierarchyFile.seekp(partition * writeToHierarchyPartitionSizeInBytes + writeToHierarchyOffset, ios::beg);
 	}
-	if (partition > 0 || hddOffset > 0)
+	if (partition > 0 || readFromHierarchyOffset > 0)
 	{
-		inputFile.seekg(partition * hddPartitionSizeInBytes + hddOffset, ios::beg);
+		readFromHierarchyFile.seekg(partition * readFromHierarchyPartitionSizeInBytes + readFromHierarchyOffset, ios::beg);
 	}
 
 	blockSize = RoundDown(blockSize, _recsize);
-	int read_size = RoundDown(HDD_PAGE_SIZE, _recsize);
+	int read_size = RoundDown(readFromHierarchyPageSize, _recsize);
 	while (blockSize > 0)
 	{
 		char data[read_size];
 		int read_block = blockSize >= read_size ? read_size : blockSize;
-		inputFile.read(data, read_block);
-		ram.write(data, read_block);
+		readFromHierarchyFile.read(data, read_block);
+		// writeToHierarchyFile.write(data, read_block);
+		// Convert char array to a string
+		std::string data_str(data, read_block);
+		// cout << "Printing data\n";
+		// cout << data_str << endl;
+		writeToHierarchyFile << data_str << endl;
+		// break;
+		// Write the string to the output file
+
 		blockSize = blockSize - read_block;
 	}
 
-	ram.close();
-	inputFile.close();
+	writeToHierarchyFile.close();
+	readFromHierarchyFile.close();
 	return true;
 }
