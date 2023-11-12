@@ -3,8 +3,8 @@
 #include <string>
 #include "Sort.h"
 using namespace std;
-#define DRAM_BYTES 10*1024*1024
-#define HDD_PAGE_SIZE 1024*1024
+#define DRAM_BYTES 10*1024
+#define HDD_PAGE_SIZE 1024
 #define NWAY_MERGE 8
 
 SortPlan::SortPlan (Plan * const input) : _input (input)
@@ -61,6 +61,19 @@ bool SortIterator::next ()
 	if (_produced >= _consumed)  return false;
 	
 	externalMerge();
+	ifstream inputFile("DRAM.txt", ios::end);
+	if(!inputFile) {
+		cout<< "cannot open the hard disk"<<endl; 
+		exit(1);
+	}
+
+	char data[160];
+	inputFile.read(data, 160);
+
+	cout<<"data reqad is "<<data<<endl;
+
+	inputFile.close();
+
 	return false;
 } // SortIterator::next
 
@@ -122,11 +135,11 @@ int SortIterator:: externalMerge() {
 	int recordsInEachBatch = divide(DRAM_BYTES, _recsize);
 	int steps = divide(recordsInEachBatch, NWAY_MERGE);
 	uint ramOffsets[NWAY_MERGE+1] = {0};
-	uint hddOffsets[NWAY_MERGE+1] = {0};
+	uint hddOffsets[NWAY_MERGE] = {0};
 	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES/(NWAY_MERGE+1), _recsize);
-	int hddPartitionSizeInBytes = RoundDown(HDD_PAGE_SIZE, _recsize);
-	for(int i=0;i<steps; i++) {
-		initRamMem(ramPartitionSizeInBytes, i+1);
+	// int hddPartitionSizeInBytes = RoundDown(HDD_PAGE_SIZE, _recsize);
+	for(int i=0;i<1; i++) {
+		initRamMem(ramPartitionSizeInBytes, i);
 		/*
 		load data from ram to cache and sort 
 		//TODO: tournament tree logic
@@ -146,30 +159,34 @@ void SortIterator::initRamMem(uint blockSize, int step) {
 bool SortIterator::loadRamBlocks(int partition, int ramOffset, int hddOffset, uint blockSize, int step)
 {
 	//if hddOffset reaches limit return false
-	ofstream ram("DRAM.txt");
-	ifstream inputFile("HDD2.txt");
+	fstream ram("DRAM.txt", ios::in|ios::out);
+	ifstream inputFile("HDD2.txt", ios::beg);
 	if(!ram.is_open() || !inputFile.is_open()) {
 		cout<<"failed to load data from Hdd"<<endl;
 		TRACE(true);
 		exit(1);
 	}
+	//size of each buffer in bytes in ram
 	streamoff ramPartitionSizeInBytes = RoundDown(DRAM_BYTES / (NWAY_MERGE + 1), _recsize);
-	streamoff hddPartitionSizeInBytes = RoundDown(DRAM_BYTES, _recsize)*step;
+	//size of each buffer in hdd for first run
+	streamoff hddPartitionSizeInBytes = RoundDown(DRAM_BYTES, _recsize)*step*NWAY_MERGE;
 	if (partition > 0 || ramOffset > 0)
 	{
 		ram.seekp(partition * ramPartitionSizeInBytes + ramOffset, ios::beg);
 	}
 	if (partition > 0 || hddOffset > 0)
 	{
-		inputFile.seekg(partition * hddPartitionSizeInBytes + hddOffset, ios::beg);
+		streamoff hddPos = hddPartitionSizeInBytes + partition*RoundDown(DRAM_BYTES, _recsize);
+		inputFile.seekg(hddPos + hddOffset, ios::beg);
 	}
 
 	blockSize = RoundDown(blockSize, _recsize);
 	int read_size = RoundDown(HDD_PAGE_SIZE, _recsize);
 	while (blockSize > 0)
 	{
-		char data[read_size];
 		int read_block = blockSize >= read_size ? read_size : blockSize;
+		//1 char for the end delimiter for a char array i.e, NULL
+		char data[read_block+1];
 		inputFile.read(data, read_block);
 		ram.write(data, read_block);
 		blockSize = blockSize - read_block;
