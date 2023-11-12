@@ -4,7 +4,7 @@
 #include "Sort.h"
 #include "TournamentTree.h"
 using namespace std;
-#define CACHE_BYTES 512
+#define CACHE_BYTES 512 * 1024
 #define DRAM_BYTES 10 * 1024 * 1024
 #define HDD_PAGE_SIZE 1024 * 1024
 #define NWAY_MERGE 8
@@ -145,7 +145,7 @@ void SortIterator::mergeCacheData()
 		initCacheMem(cachePartitionSizeInBytes, step + 1);
 	}
 
-	// externalSort("CACHE.txt", "CACHE_SORTED_TEST.txt", NWAY_MERGE, totalSteps);
+	externalSort("CACHE.txt", "CACHE_SORTED_TEST.txt", NWAY_MERGE, totalSteps);
 }
 
 int SortIterator::externalMerge()
@@ -157,18 +157,18 @@ int SortIterator::externalMerge()
 	uint hddOffsets[NWAY_MERGE + 1] = {0};
 	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES / (NWAY_MERGE + 1), _recsize);
 	int hddPartitionSizeInBytes = RoundDown(HDD_PAGE_SIZE, _recsize);
+	// step -> one record in a run
 	for (int step = 0; step < totalSteps; step++)
 	{
 		initRamMem(ramPartitionSizeInBytes, step + 1);
-		break;
+		cout << "Step " << step << " of " << totalSteps << endl;
+		// break;
 		/*
 		load data from ram to cache and sort
-		//TODO: tournament tree logic
 		when any of the cache buffer is empty load from ram
-		1. Will the input of the tournament tree be sort arrays within a run?
 		*/
 	}
-	// mergeCacheData();
+	mergeCacheData();
 }
 
 void SortIterator::initCacheMem(uint blockSize, int step)
