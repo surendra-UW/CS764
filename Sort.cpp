@@ -138,7 +138,7 @@ int SortIterator:: externalMerge() {
 	uint hddOffsets[NWAY_MERGE] = {0};
 	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES/(NWAY_MERGE+1), _recsize);
 	// int hddPartitionSizeInBytes = RoundDown(HDD_PAGE_SIZE, _recsize);
-	for(int i=0;i<1; i++) {
+	for(int i=0;i<steps; i++) {
 		initRamMem(ramPartitionSizeInBytes, i);
 		/*
 		load data from ram to cache and sort 
