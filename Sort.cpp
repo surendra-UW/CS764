@@ -5,8 +5,8 @@
 #include "TournamentTree.h"
 using namespace std;
 #define CACHE_BYTES 512 * 1024
-#define DRAM_BYTES 10 * 1024 * 1024
-#define HDD_PAGE_SIZE 1024 * 1024
+#define DRAM_BYTES 10 * 1024
+#define HDD_PAGE_SIZE 1024
 #define NWAY_MERGE 8
 
 SortPlan::SortPlan(Plan *const input) : _input(input)
@@ -26,8 +26,7 @@ Iterator *SortPlan::init() const
 	return new SortIterator(this);
 } // SortPlan::init
 
-SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(plan->_input->init()),
-														 _consumed(0), _produced(0), _recsize(0)
+SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(plan->_input->init()), _consumed(0), _produced(0), _recsize(0)
 {
 	TRACE(true);
 	while (_input->next())
@@ -43,7 +42,7 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	streampos curr = inputFile.tellg();
 	_recsize = curr / _consumed;
 	inputFile.close();
-	internalSort();
+	// internalSort();
 	traceprintf("consumed %lu rows\n",
 				(unsigned long)(_consumed));
 } // SortIterator::SortIterator
@@ -65,6 +64,19 @@ bool SortIterator::next()
 		return false;
 
 	externalMerge();
+	ifstream inputFile("DRAM.txt", ios::end);
+	if (!inputFile)
+	{
+		cout << "cannot open the hard disk" << endl;
+		exit(1);
+	}
+
+	char data[160];
+	inputFile.read(data, 160);
+
+	cout << "data reqad is " << data << endl;
+
+	inputFile.close();
 	return false;
 } // SortIterator::next
 
@@ -151,10 +163,12 @@ void SortIterator::mergeCacheData()
 int SortIterator::externalMerge()
 {
 	int recordsInEachBatch = divide(DRAM_BYTES, _recsize);
+	cout << "rec " << recordsInEachBatch << endl;
+	cout << "Record size = " << _recsize << endl;
 	int totalSteps = divide(recordsInEachBatch, NWAY_MERGE);
 	// totalSteps -> total number of records in a run
 	uint ramOffsets[NWAY_MERGE + 1] = {0};
-	uint hddOffsets[NWAY_MERGE + 1] = {0};
+	uint hddOffsets[NWAY_MERGE] = {0};
 	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES / (NWAY_MERGE + 1), _recsize);
 	int hddPartitionSizeInBytes = RoundDown(HDD_PAGE_SIZE, _recsize);
 	// step -> one record in a run
@@ -183,15 +197,15 @@ void SortIterator::initRamMem(uint blockSize, int step)
 {
 	for (int i = 0; i < NWAY_MERGE; i++)
 	{
-		loadDataBlocks(i, 0, 0, blockSize, step, "DRAM.txt", "HDD2.txt", DRAM_BYTES, HDD_PAGE_SIZE);
+		loadDataBlocks(i, 0, 0, blockSize, step, "DRAM.txt", "HDD.txt", DRAM_BYTES, HDD_PAGE_SIZE);
 	}
 }
 
 bool SortIterator::loadDataBlocks(int partition, int writeToHierarchyOffset, int readFromHierarchyOffset, uint blockSize, int step, string writeToHierarchy, string readFromHierarchy, int writeToHierarchyBytes, int readFromHierarchyPageSize)
 {
 	// if readFromLevelOffset reaches limit return false
-	ofstream writeToHierarchyFile(writeToHierarchy, ios::app);
-	ifstream readFromHierarchyFile(readFromHierarchy);
+	fstream writeToHierarchyFile(writeToHierarchy, ios::in | ios::out);
+	ifstream readFromHierarchyFile(readFromHierarchy, ios::beg);
 	if (!writeToHierarchyFile.is_open() || !readFromHierarchyFile.is_open())
 	{
 		cout << "failed to load data from " << readFromHierarchy << endl;
@@ -199,29 +213,32 @@ bool SortIterator::loadDataBlocks(int partition, int writeToHierarchyOffset, int
 		exit(1);
 	}
 	streamoff writeToHierarchyPartitionSizeInBytes = RoundDown(writeToHierarchyBytes / (NWAY_MERGE + 1), _recsize);
-	streamoff readFromHierarchyPartitionSizeInBytes = RoundDown(writeToHierarchyBytes, _recsize) * step;
+	streamoff readFromHierarchyPartitionSizeInBytes = RoundDown(writeToHierarchyBytes, _recsize) * step * NWAY_MERGE;
 	if (partition > 0 || writeToHierarchyOffset > 0)
 	{
 		writeToHierarchyFile.seekp(partition * writeToHierarchyPartitionSizeInBytes + writeToHierarchyOffset, ios::beg);
 	}
 	if (partition > 0 || readFromHierarchyOffset > 0)
 	{
-		readFromHierarchyFile.seekg(partition * readFromHierarchyPartitionSizeInBytes + readFromHierarchyOffset, ios::beg);
+		// readFromHierarchyFile.seekg(partition * readFromHierarchyPartitionSizeInBytes + readFromHierarchyOffset, ios::beg);
+
+		streamoff hddPos = readFromHierarchyPartitionSizeInBytes + partition * RoundDown(DRAM_BYTES, _recsize);
+		readFromHierarchyFile.seekg(hddPos + readFromHierarchyOffset, ios::beg);
 	}
 
 	blockSize = RoundDown(blockSize, _recsize);
 	int read_size = RoundDown(readFromHierarchyPageSize, _recsize);
 	while (blockSize > 0)
 	{
-		char data[read_size];
 		int read_block = blockSize >= read_size ? read_size : blockSize;
+		char data[read_block + 1];
 		readFromHierarchyFile.read(data, read_block);
 		// writeToHierarchyFile.write(data, read_block);
 		// Convert char array to a string
-		std::string data_str(data, read_block);
+		// std::string data_str(data, read_block);
 		// cout << "Printing data\n";
 		// cout << data_str << endl;
-		writeToHierarchyFile << data_str << endl;
+		writeToHierarchyFile.write(data, read_block);
 		// break;
 		// Write the string to the output file
 
