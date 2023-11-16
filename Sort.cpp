@@ -33,7 +33,7 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 	while (_input->next ())  ++ _consumed;
 	delete _input;
 
-	ifstream inputFile("HDD.txt", ios_base::binary|ios_base::ate);
+	ifstream inputFile("HDD.txt", ios::binary|ios::ate);
 	if(!inputFile) {
 		cout<< "cannot open the hard disk"<<endl; 
 		exit(1);
@@ -103,7 +103,7 @@ bool SortIterator:: internalSort() {
 
 bool SortIterator:: copyRamToHDD() {
 	ifstream inputFile("DRAM.txt");
-    ofstream outputHDDFile("HDD2.txt", ios_base::app);
+    ofstream outputHDDFile("HDD2.txt", ios::app);
 	if(inputFile.is_open() && outputHDDFile.is_open()) {
 		outputHDDFile<<inputFile.rdbuf();
 		inputFile.close();
