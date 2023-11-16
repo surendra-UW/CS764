@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include "Sort.h"
+#include <stdlib.h>
 using namespace std;
 #define DRAM_BYTES 10*1024
 #define HDD_PAGE_SIZE 1024
@@ -32,7 +33,7 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 	while (_input->next ())  ++ _consumed;
 	delete _input;
 
-	ifstream inputFile("HDD.txt", ios::binary|ios::end);
+	ifstream inputFile("HDD.txt", ios_base::binary|ios_base::ate);
 	if(!inputFile) {
 		cout<< "cannot open the hard disk"<<endl; 
 		exit(1);
@@ -61,24 +62,12 @@ bool SortIterator::next ()
 	if (_produced >= _consumed)  return false;
 	
 	externalMerge();
-	ifstream inputFile("DRAM.txt", ios::end);
-	if(!inputFile) {
-		cout<< "cannot open the hard disk"<<endl; 
-		exit(1);
-	}
-
-	char data[160];
-	inputFile.read(data, 160);
-
-	cout<<"data reqad is "<<data<<endl;
-
-	inputFile.close();
 
 	return false;
 } // SortIterator::next
 
 bool SortIterator:: internalSort() {
-	ifstream inputFile("HDD.txt", ios::beg);
+	ifstream inputFile("HDD.txt");
 	if(!inputFile) {
 		cout<< "cannot open the hard disk"<<endl;
 		return 1;
@@ -114,7 +103,7 @@ bool SortIterator:: internalSort() {
 
 bool SortIterator:: copyRamToHDD() {
 	ifstream inputFile("DRAM.txt");
-    ofstream outputHDDFile("HDD2.txt", ios::app);
+    ofstream outputHDDFile("HDD2.txt", ios_base::app);
 	if(inputFile.is_open() && outputHDDFile.is_open()) {
 		outputHDDFile<<inputFile.rdbuf();
 		inputFile.close();
@@ -160,7 +149,7 @@ bool SortIterator::loadRamBlocks(int partition, int ramOffset, int hddOffset, ui
 {
 	//if hddOffset reaches limit return false
 	fstream ram("DRAM.txt", ios::in|ios::out);
-	ifstream inputFile("HDD2.txt", ios::beg);
+	ifstream inputFile("HDD2.txt");
 	if(!ram.is_open() || !inputFile.is_open()) {
 		cout<<"failed to load data from Hdd"<<endl;
 		TRACE(true);
