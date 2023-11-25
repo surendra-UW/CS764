@@ -144,28 +144,29 @@ void SortIterator::clearRam()
 
 void SortIterator::mergeCacheData()
 {
-	int recordsInEachBatch = divide(CACHE_BYTES, _recsize);
-	int totalSteps = divide(recordsInEachBatch, CACHE_BYTES);
+	int recordsInEachBatch = divide(CACHE_BYTES, NWAY_MERGE + 1);
+	int totalSteps = divide(recordsInEachBatch, CACHE_BYTES) / NWAY_MERGE;
 	// totalSteps -> total number of records in a run
 	uint cacheOffsets[NWAY_MERGE + 1] = {0};
 	uint ramOffsets[NWAY_MERGE + 1] = {0};
 	int cachePartitionSizeInBytes = RoundDown(CACHE_BYTES / (NWAY_MERGE + 1), _recsize);
 	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES, _recsize);
-
+	int buffer_size = divide(cachePartitionSizeInBytes, _recsize);
 	for (int step = 0; step < totalSteps; step++)
 	{
-		initCacheMem(cachePartitionSizeInBytes, step + 1);
+		initCacheMem(cachePartitionSizeInBytes, 1);
 	}
 
-	externalSort("CACHE.txt", "CACHE_SORTED_TEST.txt", NWAY_MERGE, totalSteps);
+	externalSort("CACHE.txt", "CACHE_SORTED_TEST.txt", NWAY_MERGE, buffer_size);
 }
 
 int SortIterator::externalMerge()
 {
-	int recordsInEachBatch = divide(DRAM_BYTES, _recsize);
+	//  each way merge should have DRAM size records
+	RowCount recordsInEachBatch = NWAY_MERGE * divide(DRAM_BYTES, _recsize);
 	cout << "rec " << recordsInEachBatch << endl;
 	cout << "Record size = " << _recsize << endl;
-	int totalSteps = divide(recordsInEachBatch, NWAY_MERGE);
+	int totalSteps = divide(_consumed, recordsInEachBatch);
 	// totalSteps -> total number of records in a run
 	uint ramOffsets[NWAY_MERGE + 1] = {0};
 	uint hddOffsets[NWAY_MERGE] = {0};

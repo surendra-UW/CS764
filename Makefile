@@ -54,5 +54,13 @@ co :
 clean :
 	@rm -f $(OBJS) data.txt Test.exe Test.exe.stackdump trace
 
-run: Test.exe
+run: 	Test.exe
+	# rm DRAM.txt
+	# rm HDD.txt
+	# rm HDD2.txt
+	# rm CACHE.txt
+	touch DRAM.txt
+	touch HDD.txt
+	touch HDD2.txt
+	touch CACHE.txt
 	./Test.exe

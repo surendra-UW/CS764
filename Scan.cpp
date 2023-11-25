@@ -8,7 +8,6 @@
 #define RANDMAX 999999999999
 using namespace std;
 
-
 ScanPlan::ScanPlan(RowCount const count) : _count(count)
 {
 	TRACE(true);
@@ -59,7 +58,7 @@ bool ScanIterator::next()
 	rs.member2 = distribution(gen);
 	rs.member3 = distribution(gen);
 	rs.member4 = distribution(gen);
-	
+
 	FILE *outputFile = std::fopen("HDD.txt", "a");
 	if (!outputFile)
 	{
