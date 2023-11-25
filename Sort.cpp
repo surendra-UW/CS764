@@ -70,8 +70,6 @@ bool SortIterator::next ()
 	char data[160];
 	inputFile.read(data, 160);
 
-	cout<<"data reqad is "<<data<<endl;
-
 	inputFile.close();
 
 	return false;
@@ -132,8 +130,8 @@ void SortIterator::clearRam() {
 }
 
 int SortIterator:: externalMerge() {
-	int recordsInEachBatch = divide(DRAM_BYTES, _recsize);
-	int steps = divide(recordsInEachBatch, NWAY_MERGE);
+	RowCount recordsInEachBatch = divide(DRAM_BYTES, _recsize)*NWAY_MERGE;
+	int steps = divide(_consumed, recordsInEachBatch);
 	uint ramOffsets[NWAY_MERGE+1] = {0};
 	uint hddOffsets[NWAY_MERGE] = {0};
 	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES/(NWAY_MERGE+1), _recsize);
@@ -158,7 +156,8 @@ void SortIterator::initRamMem(uint blockSize, int step) {
 
 bool SortIterator::loadRamBlocks(int partition, int ramOffset, int hddOffset, uint blockSize, int step)
 {
-	//if hddOffset reaches limit return false
+	streampos hddPartitionSize = RoundDown(DRAM_BYTES, _recsize);
+	if(hddOffset >= hddPartitionSize) return false;
 	fstream ram("DRAM.txt", ios::in|ios::out);
 	ifstream inputFile("HDD2.txt", ios::beg);
 	if(!ram.is_open() || !inputFile.is_open()) {
