@@ -46,7 +46,6 @@ bool ScanIterator::next()
 		return false;
 
 	RecordStructure rs;
-
 	// Create a random number generator engine and seed it
 	std::random_device rd;
 	std::mt19937 gen(rd());

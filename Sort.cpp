@@ -3,6 +3,7 @@
 #include <string>
 #include "Sort.h"
 #include <stdlib.h>
+#include "internal_sort.h"
 using namespace std;
 #define DRAM_BYTES 10*1024
 #define HDD_PAGE_SIZE 1024
@@ -27,7 +28,7 @@ Iterator * SortPlan::init () const
 
 SortIterator::SortIterator (SortPlan const * const plan) :
 	_plan (plan), _input (plan->_input->init ()),
-	_consumed (0), _produced (0), _recsize(0)
+	_consumed (0), _produced (0), _recsize(52)
 {
 	TRACE (true);
 	while (_input->next ())  ++ _consumed;
@@ -39,7 +40,9 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 		exit(1);
 	}
 	streampos curr = inputFile.tellg();
-	_recsize = curr/_consumed;
+	// cout<<"eof: "<<curr<<endl;
+	// cout<<_consumed<<endl;
+	// _recsize = curr/_consumed;
 	inputFile.close();
 	internalSort();
 	traceprintf ("consumed %lu rows\n",
@@ -73,8 +76,10 @@ bool SortIterator:: internalSort() {
 		return 1;
 	}
 	int run = 0;
-	while (_produced < _consumed)
-	{
+	int flag = 0;
+	// cout<<_recsize<<"record size "<<endl;
+	for(int i=0;i<2;i++){
+		std::vector<RecordStructure> arr;
 		ofstream outputFile("DRAM.txt", ios::app);
 		uint64_t block_left = (_consumed - _produced) * _recsize;
 		if (block_left > DRAM_BYTES)
@@ -84,17 +89,26 @@ bool SortIterator:: internalSort() {
 		//should we load 1Mb at a time ???
 		block_left = RoundDown(block_left, _recsize);
 		int read_size = RoundDown(HDD_PAGE_SIZE, _recsize);
+		cout<<"block size "<< block_left<<"read size "<< read_size<<endl;
 		while (block_left > 0)
 		{
 			char data[read_size];
 			int read_block = block_left / read_size > 0 ? read_size: block_left;
 			inputFile.read(data, read_block);
+			cout<<"data: "<<data<<endl;
 			_produced = _produced + read_block / _recsize;
 			outputFile.write(data, read_block);	
 			block_left = block_left - read_block;
 		}
 		outputFile.close();
-		//TODO: internal sort usig ram data
+		//TODO: internal sort using ram data
+		arr = read_ramfile("DRAM.txt");
+		quickSort(arr, customComparator);
+		// if(flag == 0){
+		write_ramfile("DRAM.txt", arr);
+
+		
+		// flag = 1;
 		if(!copyRamToHDD()) exit(1);
 	}
 	_produced = 0;
@@ -147,6 +161,7 @@ void SortIterator::initRamMem(uint blockSize, int step) {
 
 bool SortIterator::loadRamBlocks(int partition, int ramOffset, int hddOffset, uint blockSize, int step)
 {
+	std::cout << "Hello, World!" << std::endl;
 	//if hddOffset reaches limit return false
 	fstream ram("DRAM.txt", ios::in|ios::out);
 	ifstream inputFile("HDD2.txt");
