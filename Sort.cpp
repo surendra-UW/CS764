@@ -1,14 +1,22 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "defs.h"
 #include "Sort.h"
 #include <stdlib.h>
+#include "constants.h"
+#include "Cache.h"
+#include "DRAM.h"
+#include "SSD.h"
 #include "internal_sort.h"
+
 using namespace std;
-#define DRAM_BYTES 10*1024
+
+
 #define HDD_PAGE_SIZE 1024
 #define NWAY_MERGE 8
 
+int recordsize = 0;
 SortPlan::SortPlan (Plan * const input) : _input (input)
 {
 	TRACE (true);
@@ -31,7 +39,8 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 	_consumed (0), _produced (0), _recsize(52)
 {
 	TRACE (true);
-	while (_input->next ())  ++ _consumed;
+	// while (_input->next ())  ++ _consumed;
+	_consumed = 3616612;
 	delete _input;
 
 	ifstream inputFile("HDD.txt", ios::binary|ios::ate);
@@ -40,11 +49,13 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 		exit(1);
 	}
 	streampos curr = inputFile.tellg();
-	// cout<<"eof: "<<curr<<endl;
-	// cout<<_consumed<<endl;
-	// _recsize = curr/_consumed;
+	_recsize = curr/_consumed;
 	inputFile.close();
-	internalSort();
+	recordsize = _recsize;
+	//initialize 
+	// DRAM dram(100);
+	batches = 100;
+	// internalSort();
 	traceprintf ("consumed %lu rows\n",
 			(unsigned long) (_consumed));
 } // SortIterator::SortIterator
@@ -69,50 +80,27 @@ bool SortIterator::next ()
 	return false;
 } // SortIterator::next
 
+int getMaxSSDBatches() {
+	return 0.95*(SSD_SIZE_IN_BYTES/DRAM_SIZE_IN_BYTES);
+}
+
 bool SortIterator:: internalSort() {
-	ifstream inputFile("HDD.txt");
-	if(!inputFile) {
-		cout<< "cannot open the hard disk"<<endl;
-		return 1;
-	}
-	int run = 0;
-	int flag = 0;
-	// cout<<_recsize<<"record size "<<endl;
-	for(int i=0;i<2;i++){
+	DRAM dram; 
+	int max_bacthes = getMaxSSDBatches();
+	while(_produced < _consumed && batches < max_bacthes) {
 		std::vector<RecordStructure> arr;
-		ofstream outputFile("DRAM.txt", ios::app);
-		uint64_t block_left = (_consumed - _produced) * _recsize;
-		if (block_left > DRAM_BYTES)
-		{
-			block_left = DRAM_BYTES;
-		}
-		//should we load 1Mb at a time ???
-		block_left = RoundDown(block_left, _recsize);
-		int read_size = RoundDown(HDD_PAGE_SIZE, _recsize);
-		cout<<"block size "<< block_left<<"read size "<< read_size<<endl;
-		while (block_left > 0)
-		{
-			char data[read_size];
-			int read_block = block_left / read_size > 0 ? read_size: block_left;
-			inputFile.read(data, read_block);
-			cout<<"data: "<<data<<endl;
-			_produced = _produced + read_block / _recsize;
-			outputFile.write(data, read_block);	
-			block_left = block_left - read_block;
-		}
-		outputFile.close();
-		//TODO: internal sort using ram data
+		uint dramRecords = divide(RoundDown(DRAM_SIZE_IN_BYTES, _recsize), (size_t)_recsize);
+		uint recordsToConsume = (_consumed - _produced) > dramRecords ? dramRecords: (_consumed - _produced);
+		dram.loadFromHDD(recordsToConsume);
 		arr = read_ramfile("DRAM.txt");
 		quickSort(arr, customComparator);
-		// if(flag == 0){
 		write_ramfile("DRAM.txt", arr);
-
-		
-		// flag = 1;
+		arr.resize(0);
+		_produced = _produced+recordsToConsume;
 		if(!copyRamToHDD()) exit(1);
+		dram.clearRam();
+		batches++;
 	}
-	_produced = 0;
-	inputFile.close();
 }
 
 bool SortIterator:: copyRamToHDD() {
@@ -129,29 +117,32 @@ bool SortIterator:: copyRamToHDD() {
 	}
 	return true;
 }
+
+
+int SortIterator:: externalMerge() {
+
+	uint64_t dram_partition_size = DRAM_SIZE_IN_BYTES/batches;
+	uint64_t rounded_dram_block = RoundDown(dram_partition_size, _recsize);
+	uint32_t cache_partition_size = CACHE_SIZE_IN_BYTES/batches;
+	uint32_t rounded_cache_block = RoundDown(cache_partition_size, _recsize);
+	// cout<<"dram "<<dram_partition_size<<"block "<<rounded_dram_block<<endl;
+	// cout<<"cache "<<cache_partition_size<<"block "<<rounded_cache_block<<endl;
+	DRAM dram_merge(batches);
+	Cache cache_merge(batches);
+	for(int i=0;i<batches;i++) {
+		dram_merge.read(i, rounded_dram_block);
+		cache_merge.read(i, rounded_cache_block);
+	}
+
+
+}
+
 void SortIterator::clearRam() {
 	ofstream clearRAM("DRAM.txt", ofstream::trunc);
 	clearRAM.close();
 }
 
-int SortIterator:: externalMerge() {
-	int recordsInEachBatch = divide(DRAM_BYTES, _recsize);
-	int steps = divide(recordsInEachBatch, NWAY_MERGE);
-	uint ramOffsets[NWAY_MERGE+1] = {0};
-	uint hddOffsets[NWAY_MERGE] = {0};
-	int ramPartitionSizeInBytes = RoundDown(DRAM_BYTES/(NWAY_MERGE+1), _recsize);
-	// int hddPartitionSizeInBytes = RoundDown(HDD_PAGE_SIZE, _recsize);
-	for(int i=0;i<steps; i++) {
-		initRamMem(ramPartitionSizeInBytes, i);
-		/*
-		load data from ram to cache and sort 
-		//TODO: tournament tree logic
-		when any of the cache buffer is empty load from ram
-		*/
-
-	}
-
-}
+/*
 
 void SortIterator::initRamMem(uint blockSize, int step) {
 	for(int i=0;i<NWAY_MERGE;i++){
@@ -171,16 +162,16 @@ bool SortIterator::loadRamBlocks(int partition, int ramOffset, int hddOffset, ui
 		exit(1);
 	}
 	//size of each buffer in bytes in ram
-	streamoff ramPartitionSizeInBytes = RoundDown(DRAM_BYTES / (NWAY_MERGE + 1), _recsize);
+	streamoff ramPartitionSizeInBytes = RoundDown(DRAM_SIZE_IN_BYTES / (NWAY_MERGE + 1), _recsize);
 	//size of each buffer in hdd for first run
-	streamoff hddPartitionSizeInBytes = RoundDown(DRAM_BYTES, _recsize)*step*NWAY_MERGE;
+	streamoff hddPartitionSizeInBytes = RoundDown(DRAM_SIZE_IN_BYTES, _recsize)*step*NWAY_MERGE;
 	if (partition > 0 || ramOffset > 0)
 	{
 		ram.seekp(partition * ramPartitionSizeInBytes + ramOffset, ios::beg);
 	}
 	if (partition > 0 || hddOffset > 0)
 	{
-		streamoff hddPos = hddPartitionSizeInBytes + partition*RoundDown(DRAM_BYTES, _recsize);
+		streamoff hddPos = hddPartitionSizeInBytes + partition*RoundDown(DRAM_SIZE_IN_BYTES, _recsize);
 		inputFile.seekg(hddPos + hddOffset, ios::beg);
 	}
 
@@ -200,3 +191,4 @@ bool SortIterator::loadRamBlocks(int partition, int ramOffset, int hddOffset, ui
 	inputFile.close();
 	return true;
 }
+*/

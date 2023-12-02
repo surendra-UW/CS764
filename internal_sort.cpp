@@ -31,7 +31,7 @@ std::vector<RecordStructure> read_ramfile(char *inputfile){
     std::string line;
     
     while (std::getline(input_file, line)) {
-        cout<<line<<endl;
+        // cout<<line<<endl;
         std::istringstream ss(line);
         std::string token;
         RecordStructure record;
@@ -45,6 +45,7 @@ std::vector<RecordStructure> read_ramfile(char *inputfile){
         arr.push_back(record);
     }
      input_file.close();
+     cout<<"array size after reading "<< arr.size()<<endl;
     return arr;
 
 }
@@ -55,6 +56,7 @@ void write_ramfile(char *inputfile, std::vector<RecordStructure>& arr){
         std::cerr << "Error opening output file!" << std::endl;
     }
     
+    cout<<arr.size()<<endl;
     // Write the sorted data back to the file
     for (size_t i = 0; i < arr.size(); ++i) {
         const RecordStructure& record = arr[i];

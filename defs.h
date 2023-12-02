@@ -124,6 +124,7 @@ template <class Val> inline Val mask (int const from, int const to)
 	return (((Val) 2) << to) - (((Val) 1) << from);
 } // Value mask (int from, int to)
 
+
 size_t Random (size_t const range);
 size_t Random (size_t const low_incl, size_t const high_incl);
 size_t RoundDown (size_t const x, size_t const y);
@@ -134,3 +135,4 @@ size_t msb (size_t const x);
 int msbi (size_t const x);
 char const * YesNo (bool const b);
 char const * OkBad (bool const b);
+extern int recordsize;
