@@ -30,5 +30,5 @@ private:
 	Iterator * const _input;
 	RowCount _consumed, _produced;
 	int _recsize;
-	int batches;
+	uint batches;
 }; // class SortIterator

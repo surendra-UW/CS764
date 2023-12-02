@@ -18,7 +18,7 @@ void fileOpenCheck(StreamType& file, string fileName)
 }
 
 void DRAM::read(int partition, uint64_t block_size) {
-    uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES, recordsize)/_NWAY;
+    uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES/_NWAY, recordsize);
     ifstream inputFile(SSD_FILE_NAME);
     fstream dramFile(DRAM_FILE_NAME, ios::in|ios::out);
     fileOpenCheck(inputFile, SSD_FILE_NAME);
@@ -32,6 +32,7 @@ void DRAM::read(int partition, uint64_t block_size) {
     {
         int read_block = block_size > load_size ? load_size : block_size;
         inputFile.read(readBuffer, read_block);
+        // cout<<"dram read "<<readBuffer<<endl;
         dramFile.write(readBuffer, read_block);
         block_size -= read_block;
     }
@@ -75,7 +76,6 @@ DRAM:: ~DRAM()
 
 /* This function loads data from HDD in 100MB into DRAM for internal sorting*/
 void DRAM::loadFromHDD(uint recordsToConsume){
-    const uint64_t roundedDRAMBlockSize = RoundDown(DRAM_SIZE_IN_BYTES, recordsize);
     ifstream HDDFile(HDD_FILE_NAME, ios::binary);
     fileOpenCheck(HDDFile, HDD_FILE_NAME);
     HDDFile.seekg(hddSortOffset, ios::beg);

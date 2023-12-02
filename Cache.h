@@ -11,10 +11,11 @@ class Cache: public Memory {
         Cache(int NWAY);
         Cache();
         ~Cache();
-        char *readFromCache(int partition);
+        streamoff getReadOffset(int partition);
+        void setReadOffset(int partition, streamoff offset); 
 
     private: 
         int _NWAY;
         streamoff *readOffsets;
-        streamoff *loadOffsets;
+        // streamoff *loadOffsets;
 };                                                                                          

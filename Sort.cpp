@@ -53,9 +53,8 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 	inputFile.close();
 	recordsize = _recsize;
 	//initialize 
-	// DRAM dram(100);
-	batches = 100;
-	// internalSort();
+	batches = 0;
+	internalSort();
 	traceprintf ("consumed %lu rows\n",
 			(unsigned long) (_consumed));
 } // SortIterator::SortIterator
@@ -80,18 +79,21 @@ bool SortIterator::next ()
 	return false;
 } // SortIterator::next
 
-int getMaxSSDBatches() {
-	return 0.95*(SSD_SIZE_IN_BYTES/DRAM_SIZE_IN_BYTES);
+uint getMaxSSDBatches() {
+	uint64_t partitions = (SSD_SIZE_IN_BYTES)/(DRAM_SIZE_IN_BYTES);
+	return (uint)(0.99*partitions);
 }
 
 bool SortIterator:: internalSort() {
 	DRAM dram; 
-	int max_bacthes = getMaxSSDBatches();
-	while(_produced < _consumed && batches < max_bacthes) {
+	uint max_batches = getMaxSSDBatches();
+	cout<<"max_batches"<<max_batches<<endl;
+	while((_produced < _consumed) && (batches < max_batches)) {
 		std::vector<RecordStructure> arr;
 		uint dramRecords = divide(RoundDown(DRAM_SIZE_IN_BYTES, _recsize), (size_t)_recsize);
 		uint recordsToConsume = (_consumed - _produced) > dramRecords ? dramRecords: (_consumed - _produced);
 		dram.loadFromHDD(recordsToConsume);
+		cout<<"loading ram with rec "<<recordsToConsume<<endl;
 		arr = read_ramfile("DRAM.txt");
 		quickSort(arr, customComparator);
 		write_ramfile("DRAM.txt", arr);
@@ -100,17 +102,18 @@ bool SortIterator:: internalSort() {
 		if(!copyRamToHDD()) exit(1);
 		dram.clearRam();
 		batches++;
+		cout<<"current bacth "<<batches<<endl;
 	}
 }
 
 bool SortIterator:: copyRamToHDD() {
 	ifstream inputFile("DRAM.txt");
-    ofstream outputHDDFile("HDD2.txt", ios::app);
+    ofstream outputHDDFile("SSD.txt", ios::app);
 	if(inputFile.is_open() && outputHDDFile.is_open()) {
 		outputHDDFile<<inputFile.rdbuf();
 		inputFile.close();
 		outputHDDFile.close();
-		clearRam();
+		// clearRam();
 	} else {
 		cout<<"cannot open files to evict ram"<<endl;
 		return false;
@@ -134,7 +137,9 @@ int SortIterator:: externalMerge() {
 		cache_merge.read(i, rounded_cache_block);
 	}
 
-
+	// if(cache_merge.getReadOffset(i) if reached limit) {
+	// 	ram load;
+	// }
 }
 
 void SortIterator::clearRam() {
@@ -142,6 +147,10 @@ void SortIterator::clearRam() {
 	clearRAM.close();
 }
 
+// uint SortIterator::blockLeftToMerge(Cache cache, DRAM dram, int partition) {
+// 	streamoff offset = cache.getReadOffset(partition);
+
+// }
 /*
 
 void SortIterator::initRamMem(uint blockSize, int step) {
