@@ -4,7 +4,7 @@ public:
 
     /*pure virtual functions as of now leaving 
     implementation to the derived classes */
-    virtual void read(int partition, uint64_t block_size) = 0;
+    virtual int read(int partition, uint64_t block_size) = 0;
     virtual void write() =0;
 
     virtual ~Memory() {}

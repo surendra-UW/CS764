@@ -5,7 +5,7 @@ using namespace std;
 
 class Cache: public Memory {
     public: 
-        void read(int partition, uint64_t block_size) override;
+        int read(int partition, uint64_t block_size) override;
         void write() override;
         // void clearRam();
         Cache(int NWAY);
@@ -17,5 +17,5 @@ class Cache: public Memory {
     private: 
         int _NWAY;
         streamoff *readOffsets;
-        // streamoff *loadOffsets;
+        uint32_t *records_in_partition;
 };                                                                                          

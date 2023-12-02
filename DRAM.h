@@ -5,7 +5,7 @@ using namespace std;
 
 class DRAM: public Memory {
     public: 
-        void read(int partition, uint64_t offset) override;
+        int read(int partition, uint64_t offset) override;
         void write() override;
         void clearRam();
         DRAM(int NWAY);
@@ -17,5 +17,6 @@ class DRAM: public Memory {
     private: 
         int _NWAY;
         streamoff *readOffsets;
-        streamoff hddSortOffset;
+        streamoff hddSortOffset; //for internal sorting 
+        uint32_t *records_in_partition;
 };                                                                                          

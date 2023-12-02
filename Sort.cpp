@@ -39,8 +39,9 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 	_consumed (0), _produced (0), _recsize(52)
 {
 	TRACE (true);
-	// while (_input->next ())  ++ _consumed;
+
 	// TODO: hard coding and commenting records generation 
+	// while (_input->next ())  ++ _consumed;
 	_consumed = 22690;
 	delete _input;
 
@@ -131,23 +132,16 @@ int SortIterator:: externalMerge() {
 	uint64_t rounded_dram_block = RoundDown(dram_partition_size, _recsize);
 	uint32_t cache_partition_size = CACHE_SIZE_IN_BYTES/batches;
 	uint32_t rounded_cache_block = RoundDown(cache_partition_size, _recsize);
-	// cout<<"dram "<<dram_partition_size<<"block "<<rounded_dram_block<<endl;
-	// cout<<"cache "<<cache_partition_size<<"block "<<rounded_cache_block<<endl;
+
 	DRAM dram_merge(batches);
 	Cache cache_merge(batches);
+
 	for(int i=0;i<batches;i++) {
 		dram_merge.read(i, rounded_dram_block);
 		cache_merge.read(i, rounded_cache_block);
 	}
 
-	// if(cache_merge.getReadOffset(i) if reached limit) {
-	// 	ram load;
-	// }
-}
-
-void SortIterator::clearRam() {
-	ofstream clearRAM("DRAM.txt", ofstream::trunc);
-	clearRAM.close();
+	
 }
 
 // uint SortIterator::blockLeftToMerge(Cache cache, DRAM dram, int partition) {

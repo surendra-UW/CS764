@@ -17,7 +17,19 @@ void fileOpenCheck(StreamType& file, string fileName)
 	}
 }
 
-void DRAM::read(int partition, uint64_t block_size) {
+int DRAM::read(int partition, uint64_t block_size) {
+
+    uint32_t records_to_consume = block_size/recordsize;
+
+    // check the records count left in SSD in this partition
+    if(records_in_partition[partition] == 0) return -1; // indicating end of partition
+
+    //records left in the partition is less than the partition size
+    else if(records_in_partition[partition] < records_to_consume) {
+        records_to_consume = records_in_partition[partition];
+        block_size = records_to_consume*recordsize;
+    }
+
     uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES/_NWAY, recordsize);
     ifstream inputFile(SSD_FILE_NAME);
     fstream dramFile(DRAM_FILE_NAME, ios::in|ios::out);
@@ -25,7 +37,9 @@ void DRAM::read(int partition, uint64_t block_size) {
     fileOpenCheck(dramFile, DRAM_FILE_NAME);
     dramFile.seekp(partition_size*partition, ios::beg);
     inputFile.seekg(readOffsets[partition], ios::beg);
-    /* Loading into ram in the 1MB chunks*/
+
+    /* Loading into ram in the 1MB chunks due to os limitations
+    can be done in larger chunks if os supports */
     const int load_size = 1<<20;
     char readBuffer[load_size];
     while (block_size > 0 && !inputFile.eof())
@@ -37,6 +51,8 @@ void DRAM::read(int partition, uint64_t block_size) {
         block_size -= read_block;
     }
     readOffsets[partition] = inputFile.tellg();
+    records_in_partition[partition] = records_in_partition[partition]-records_to_consume;
+    return 1;
 }
 
 void DRAM::write() {
@@ -62,8 +78,18 @@ DRAM::DRAM(int NWAY) : _NWAY(NWAY)
     readOffsets = new streamoff[NWAY];
     //initializing offsets for ssd
     streamoff partition_size = RoundDown(DRAM_SIZE_IN_BYTES, recordsize);
-    for (int i = 0; i < NWAY; i++)
+    uint32_t max_records = partition_size/recordsize;
+
+    for (int i = 0; i < NWAY; i++) {
         readOffsets[i] = i*partition_size;
+        records_in_partition[i] = max_records;
+        if(i == NWAY-1) {
+            //last partition 
+            ifstream inputFile(SSD_FILE_NAME, ios::binary|ios::ate);
+            streamoff ssd_size = inputFile.tellg();
+            records_in_partition[i] = (ssd_size - readOffsets[i])/recordsize;
+        }
+    }
     // DRAM();
 }
 
