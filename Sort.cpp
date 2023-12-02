@@ -40,7 +40,8 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 {
 	TRACE (true);
 	// while (_input->next ())  ++ _consumed;
-	_consumed = 3616612;
+	// TODO: hard coding and commenting records generation 
+	_consumed = 22690;
 	delete _input;
 
 	ifstream inputFile("HDD.txt", ios::binary|ios::ate);
@@ -87,11 +88,13 @@ uint getMaxSSDBatches() {
 bool SortIterator:: internalSort() {
 	DRAM dram; 
 	uint max_batches = getMaxSSDBatches();
-	cout<<"max_batches"<<max_batches<<endl;
+	cout<<"max_batches "<<max_batches<<endl;
+	cout<<"total consmed "<<_consumed<<endl;
 	while((_produced < _consumed) && (batches < max_batches)) {
 		std::vector<RecordStructure> arr;
 		uint dramRecords = divide(RoundDown(DRAM_SIZE_IN_BYTES, _recsize), (size_t)_recsize);
 		uint recordsToConsume = (_consumed - _produced) > dramRecords ? dramRecords: (_consumed - _produced);
+		cout<<"dram records "<<dramRecords<<"rec to consusc "<<recordsToConsume<<endl;
 		dram.loadFromHDD(recordsToConsume);
 		cout<<"loading ram with rec "<<recordsToConsume<<endl;
 		arr = read_ramfile("DRAM.txt");
