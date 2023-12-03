@@ -160,7 +160,7 @@ int SortIterator::externalMerge()
 		cache_merge.read(i, rounded_cache_block);
 	}
 
-	externalSort(cache_merge, "CACHE.txt", "CACHE_SORTED_TEST.txt", NWAY_MERGE);
+	externalSort(cache_merge, NWAY_MERGE);
 }
 
 // uint SortIterator::blockLeftToMerge(Cache cache, DRAM dram, int partition) {

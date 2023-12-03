@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <queue>
+#include <unistd.h>
 #include "Sort.h"
 #include "RecordStructure.h"
 #include "TournamentTree.h"
@@ -302,14 +303,122 @@ void readNextValueFromRun(Cache c, vector<queue<RecordStructure>> in, int k, int
     printf("Its offset = %d", tournamentTree[k + run_id].offsetValueCode);
 }
 
+void appendDataToDestination(char *sourceFilePath, char *destinationFilePath)
+{
+    FILE *sourceFile = fopen(sourceFilePath, "r");
+    FILE *destinationFile = fopen(destinationFilePath, "a");
+
+    if (sourceFile && destinationFile)
+    {
+        // Move to the end of the destination file
+        fseek(destinationFile, 0, SEEK_END);
+
+        // Get the current position, which is the size of the destination file
+        long currentPosition = ftell(destinationFile);
+        cout << "Current Position in destination = " << currentPosition << endl;
+        // Move back to the beginning of the source file
+        fseek(sourceFile, 0, SEEK_SET);
+        fputc('\n', destinationFile);
+        // Read and write in chunks to avoid overwriting existing data in destination file
+        char buffer[1024];
+        size_t bytesRead;
+
+        while ((bytesRead = fread(buffer, 1, sizeof(buffer), sourceFile)) > 0)
+        {
+            fwrite(buffer, 1, bytesRead, destinationFile);
+        }
+
+        printf("File appended successfully.\n");
+
+        fclose(sourceFile);
+        fclose(destinationFile);
+    }
+    else
+    {
+        printf("Error opening files.\n");
+    }
+}
+
+bool isFileFull(char *filePath, long sizeToCheck)
+{
+    FILE *file = fopen(filePath, "r");
+    if (file)
+    {
+        // Move to the end of the file
+        fseek(file, 0, SEEK_END);
+
+        // Get the current position, which is the size of the file
+        long size = ftell(file);
+
+        if (size == sizeToCheck)
+        {
+            printf("File size is exactly %d.\n", sizeToCheck);
+            fclose(file);
+            return true;
+        }
+        else
+        {
+            cout << "Size = " << size << endl;
+
+            printf("File does not exist or its size is not 8KB.\n");
+        }
+        fclose(file);
+    }
+    else
+    {
+        printf("Error opening the file.\n");
+    }
+
+    return 0;
+}
+
+void truncateFile(char *sourceFile)
+{
+    if (truncate(sourceFile, 0) == 0)
+    {
+        printf("Source file truncated.\n");
+    }
+    else
+    {
+        printf("Error truncating source file.\n");
+    }
+}
+
+void writeSortedRecordToFile(RecordStructure rs)
+{
+    /*
+    Check if DRAM_OUT has 8KB of data.
+        If yes,
+            check if SSD_OUT has 1 MB of data
+            If yes,
+                append the contents of SSD_OUT to HDD_OUT
+                Truncate SSD_OUT data
+            Append the contents of DRAM_OUT to SSD_OUT
+            Truncate DRAM_OUT data
+        Append this new record to DRAM_OUT
+    */
+    if (isFileFull("out/DRAM_OUT.txt", 8 * 1024))
+    {
+        if (isFileFull("out/SSD_OUT.txt", 1024 * 1024))
+        {
+            appendDataToDestination("out/SSD_OUT.txt", "out/HDD_OUT.txt");
+            truncateFile("out/SSD_OUT.txt");
+        }
+        appendDataToDestination("out/DRAM_OUT.txt", "out/SSD_OUT.txt");
+        truncateFile("out/DRAM_OUT.txt");
+    }
+    FILE *file = fopen("out/DRAM_OUT.txt", "w");
+    fprintf(file, "%d,%d,%d,%d\n", rs.members[0], rs.members[1], rs.members[2], rs.members[3]);
+    fclose(file);
+}
+
 void performTreeOfLosersSort(Cache c, vector<queue<RecordStructure>> in, TournamentTree tt, int k)
 {
     TournamentTreeNode *tournamentTree = tt.getTree();
     while (tournamentTree[0].element.members[0] != INT_MAX)
     {
-        // TODO: Write this record to output file
         printf("Value written to output file\t=\t%d\n", tournamentTree[0].element.members[0]);
-
+        writeSortedRecordToFile(tournamentTree[0].element);
         readNextValueFromRun(c, in, k, tournamentTree[0].runId, tournamentTree);
 
         printf("Printing Tree before UPDATING THE STRUCTURE\n");
@@ -323,9 +432,8 @@ void performTreeOfLosersSort(Cache c, vector<queue<RecordStructure>> in, Tournam
     }
 }
 
-void mergeFiles(Cache c, vector<queue<RecordStructure>> in, char *output_file, int k)
+void mergeFiles(Cache c, vector<queue<RecordStructure>> in, int k)
 {
-    FILE *out = openFile(output_file, "w");
 
     // Create a tournament tree with k nodes. Every leaf node
     // has first element of a run
@@ -369,10 +477,9 @@ void mergeFiles(Cache c, vector<queue<RecordStructure>> in, char *output_file, i
     // tt.printTreeOfLosers();
 
     performTreeOfLosersSort(c, in, tt, k);
-    fclose(out);
 }
 
-void externalSort(Cache c, char *output_file, int num_ways)
+void externalSort(Cache c, int num_ways)
 {
     // Convert the cache.txt file to array and pass to below function
     vector<queue<RecordStructure>> cache_array;
@@ -386,5 +493,5 @@ void externalSort(Cache c, char *output_file, int num_ways)
         cache_array[i] = vector<RecordStructure> -> stores records of the ith partition
         cache_array[i][j] -> stores an individual record
     */
-    mergeFiles(c, cache_array, output_file, num_ways);
+    mergeFiles(c, cache_array, num_ways);
 }
