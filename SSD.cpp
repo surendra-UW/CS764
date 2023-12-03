@@ -7,7 +7,7 @@
 using namespace std;
 
 
-void SSD::read(int partition, uint64_t block_size) {
+int SSD::read(int partition, uint64_t block_size) {
     
 }
 

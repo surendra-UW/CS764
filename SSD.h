@@ -5,7 +5,7 @@ using namespace std;
 
 class SSD: public Memory {
     public: 
-        void read(int partition, uint64_t block_size) override;
+        int read(int partition, uint64_t block_size) override;
         void write() override;
         void clearRam();
         SSD(int NWAY);
