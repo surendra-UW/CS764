@@ -12,10 +12,12 @@ using namespace std;
 
 // int TournamentTree::left(int i) { return (2 * i); }
 
-TournamentTree::TournamentTree(TournamentTreeNode a[], int size)
+TournamentTree::TournamentTree(TournamentTreeNode a[], int size, DRAM d, Cache c)
 {
     this->num_nodes = size;
     this->tournamentTree = a;
+    this->c = c;
+    this->d = d;
 }
 
 TournamentTreeNode *TournamentTree::getTree()
@@ -66,6 +68,7 @@ void TournamentTree::computeOffsetForLoser(TournamentTreeNode loser, TournamentT
 
 void TournamentTree::computeOffsetValueCode(int node_index)
 {
+    // TODO: Function to be modified
     tournamentTree[node_index].offsetValueCode = (FIELD_COUNT - tournamentTree[node_index].offset) * 100 + tournamentTree[node_index].element.members[tournamentTree[node_index].offset];
 }
 
@@ -173,7 +176,7 @@ bool TournamentTree::isLeftLesserThanRight(int left, int right, bool &computeNew
 {
     // check if nodes have the offsets computed
     // case 1: Yes
-    printf("\nisLeftLesserThanRight:: OVC(%d) = %d, OVC(%d) = %d", tournamentTree[left].offsetValueCode, left, tournamentTree[right].offsetValueCode, right);
+    printf("\nisLeftLesserThanRight:: OVC(%d) = %d, OVC(%d) = %d", left, tournamentTree[left].offsetValueCode, right, tournamentTree[right].offsetValueCode);
 
     if (tournamentTree[left].offsetValueCode != -1 && tournamentTree[right].offsetValueCode != -1)
     {
@@ -280,7 +283,7 @@ FILE *openFile(char *fileName, char *mode)
     return fp;
 }
 
-void readNextValueFromRun(Cache c, vector<queue<RecordStructure>> in, int k, int run_id, TournamentTreeNode *tournamentTree)
+void TournamentTree::readNextValueFromRun(vector<queue<RecordStructure>> in, int k, int run_id)
 {
 
     // Note the runId needs to be set explicitly here
@@ -296,6 +299,20 @@ void readNextValueFromRun(Cache c, vector<queue<RecordStructure>> in, int k, int
     else
     {
         // load data into this cache_array for run i
+        // check the DRAM offsets if data needs to be loaded from SSD
+        if (c.read(run_id) == -1)
+        {
+            // Data read from DRAM is not successful
+            // no records in DRAM
+            if (d.read(run_id) == -1)
+            {
+                // Partition - run_id in SSD is sorted!
+                // TODO: SSD Logic - For final merge step
+                // All the data in this run has been read.
+                // Pass late fence - NULL vector/ empty vector for termination of the run
+            }
+            c.read(run_id); // refilling the cache from DRAM since it failed earlier
+        }
         in[run_id] = c.loadDataForRun(run_id);
     }
 
@@ -412,27 +429,27 @@ void writeSortedRecordToFile(RecordStructure rs)
     fclose(file);
 }
 
-void performTreeOfLosersSort(Cache c, vector<queue<RecordStructure>> in, TournamentTree tt, int k)
+void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure>> in, int k)
 {
-    TournamentTreeNode *tournamentTree = tt.getTree();
-    while (tournamentTree[0].element.members[0] != INT_MAX)
+    // TournamentTreeNode *tournamentTree = getTree();
+    while (tournamentTree[0].element.members[0] != INT_MAX) // TODO: Handle the late fence case
     {
         printf("Value written to output file\t=\t%d\n", tournamentTree[0].element.members[0]);
         writeSortedRecordToFile(tournamentTree[0].element);
-        readNextValueFromRun(c, in, k, tournamentTree[0].runId, tournamentTree);
+        readNextValueFromRun(in, k, tournamentTree[0].runId);
 
-        printf("Printing Tree before UPDATING THE STRUCTURE\n");
-        tt.printTreeOfLosers();
-        tt.updateTreeStructure(
+        // printf("Printing Tree before UPDATING THE STRUCTURE\n");
+        // tt.printTreeOfLosers();
+        updateTreeStructure(
             tournamentTree[k + tournamentTree[0].runId],
-            tt.getParentIndex(k + tournamentTree[0].runId),
-            tournamentTree[tt.getParentIndex(k + tournamentTree[0].runId)]);
-        printf("Printing Tree after UPDATING THE STRUCTURE\n");
-        tt.printTreeOfLosers();
+            getParentIndex(k + tournamentTree[0].runId),
+            tournamentTree[getParentIndex(k + tournamentTree[0].runId)]);
+        // printf("Printing Tree after UPDATING THE STRUCTURE\n");
+        // tt.printTreeOfLosers();
     }
 }
 
-void mergeFiles(Cache c, vector<queue<RecordStructure>> in, int k)
+void mergeFiles(DRAM d, Cache c, vector<queue<RecordStructure>> cache_array, int k)
 {
 
     // Create a tournament tree with k nodes. Every leaf node
@@ -444,23 +461,23 @@ void mergeFiles(Cache c, vector<queue<RecordStructure>> in, int k)
     int i;
     for (i = 0; i < k; i++)
     {
-        // break if no output file is empty and
-        // index i will be no. of input files
+        // readNextValueFromRun();
+        // todo: Refactor this code
         int run_index_in_tree = k + i;
-        if (in[i].empty() == false)
+        if (cache_array[i].empty() == false)
         {
-            tournamentTree[run_index_in_tree].element = in[i].front();
+            tournamentTree[run_index_in_tree].element = cache_array[i].front();
             tournamentTree[run_index_in_tree].runId = i;
-            in[i].pop();
+            cache_array[i].pop();
         }
         else
         {
             // load data into this cache_array for run i
-            in[i] = c.loadDataForRun(i);
+            cache_array[i] = c.loadDataForRun(i);
         }
     }
 
-    TournamentTree tt(tournamentTree, 2 * k);
+    TournamentTree tt(tournamentTree, 2 * k, d, c);
     printf("Printing Tree before comparing\n");
     tt.printTreeOfLosers();
 
@@ -476,10 +493,10 @@ void mergeFiles(Cache c, vector<queue<RecordStructure>> in, int k)
     tt.initialPop(1);
     // tt.printTreeOfLosers();
 
-    performTreeOfLosersSort(c, in, tt, k);
+    tt.performTreeOfLosersSort(cache_array, k);
 }
 
-void externalSort(Cache c, int num_ways)
+void externalSort(DRAM d, Cache c, int num_ways)
 {
     // Convert the cache.txt file to array and pass to below function
     vector<queue<RecordStructure>> cache_array;
@@ -493,5 +510,5 @@ void externalSort(Cache c, int num_ways)
         cache_array[i] = vector<RecordStructure> -> stores records of the ith partition
         cache_array[i][j] -> stores an individual record
     */
-    mergeFiles(c, cache_array, num_ways);
+    mergeFiles(d, c, cache_array, num_ways);
 }

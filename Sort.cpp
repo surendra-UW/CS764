@@ -153,14 +153,14 @@ int SortIterator::externalMerge()
 
 	DRAM dram_merge(batches);
 	Cache cache_merge(batches);
-	cache_merge.rounded_cache_block = rounded_cache_block;
+
 	for (int i = 0; i < batches; i++)
 	{
-		dram_merge.read(i, rounded_dram_block);
-		cache_merge.read(i, rounded_cache_block);
+		dram_merge.read(i);
+		cache_merge.read(i);
 	}
 
-	externalSort(cache_merge, NWAY_MERGE);
+	externalSort(dram_merge, cache_merge, NWAY_MERGE);
 }
 
 // uint SortIterator::blockLeftToMerge(Cache cache, DRAM dram, int partition) {
