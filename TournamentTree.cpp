@@ -325,15 +325,6 @@ void performTreeOfLosersSort(Cache c, vector<queue<RecordStructure>> in, Tournam
 
 void mergeFiles(Cache c, vector<queue<RecordStructure>> in, char *output_file, int k)
 {
-    // FILE *in[k];
-
-    // for (int i = 0; i < k; i++)
-    // {
-    //     char fileName[10];
-    //     snprintf(fileName, sizeof(fileName), "run-%d", i);
-    //     in[i] = openFile(fileName, "r");
-    // }
-
     FILE *out = openFile(output_file, "w");
 
     // Create a tournament tree with k nodes. Every leaf node
@@ -381,7 +372,7 @@ void mergeFiles(Cache c, vector<queue<RecordStructure>> in, char *output_file, i
     fclose(out);
 }
 
-void externalSort(Cache c, char *input_file, char *output_file, int num_ways)
+void externalSort(Cache c, char *output_file, int num_ways)
 {
     // Convert the cache.txt file to array and pass to below function
     vector<queue<RecordStructure>> cache_array;

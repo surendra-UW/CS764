@@ -9,7 +9,7 @@ FILE *openFile(char *fileName, char *mode);
 
 void mergeFiles(Cache c, vector<queue<RecordStructure>> in, char *output_file, int k);
 
-void externalSort(Cache c, char *input_file, char *output_file, int num_ways);
+void externalSort(Cache c, char *output_file, int num_ways);
 class TournamentTree
 {
     TournamentTreeNode *tournamentTree;
