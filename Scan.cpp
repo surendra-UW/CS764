@@ -8,7 +8,6 @@
 #define RANDMAX 999999999999
 using namespace std;
 
-
 ScanPlan::ScanPlan(RowCount const count) : _count(count)
 {
 	TRACE(true);
@@ -54,11 +53,11 @@ bool ScanIterator::next()
 	uniform_int_distribution<unsigned long long> distribution(RANDMIN, RANDMAX); // Adjust range as needed
 
 	// Generate random values for the structure members
-	rs.member1 = distribution(gen);
-	rs.member2 = distribution(gen);
-	rs.member3 = distribution(gen);
-	rs.member4 = distribution(gen);
-	
+	rs.members[0] = distribution(gen);
+	rs.members[1] = distribution(gen);
+	rs.members[2] = distribution(gen);
+	rs.members[3] = distribution(gen);
+
 	FILE *outputFile = std::fopen("HDD.txt", "a");
 	if (!outputFile)
 	{
@@ -67,7 +66,7 @@ bool ScanIterator::next()
 		return 1;
 	}
 
-	fprintf(outputFile, "%llu,%llu,%llu,%llu\n", rs.member1, rs.member2, rs.member3, rs.member4);
+	fprintf(outputFile, "%llu,%llu,%llu,%llu\n", rs.members[0], rs.members[1], rs.members[2], rs.members[3]);
 
 	std::fclose(outputFile);
 
