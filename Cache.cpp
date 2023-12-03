@@ -65,6 +65,8 @@ Cache::Cache(int NWAY) : _NWAY(NWAY)
     uint32_t max_records = partition_size/recordsize;
 
     readOffsets = new streamoff[NWAY];
+    records_in_partition = new uint32_t[NWAY];
+    
     for (int i = 0; i < NWAY; i++) {
         readOffsets[i] = partition_size*i;
         records_in_partition[i] = max_records;
