@@ -4,6 +4,7 @@
 #include "Sort.h"
 #include <stdlib.h>
 #include "internal_sort.h"
+#include "test_scripts.h"
 using namespace std;
 #define DRAM_BYTES 10*1024
 #define HDD_PAGE_SIZE 1024
@@ -34,7 +35,7 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 	while (_input->next ())  ++ _consumed;
 	delete _input;
 
-	ifstream inputFile("HDD.txt", ios::binary|ios::ate);
+	ifstream inputFile("HDD.txt", ios_base::binary|ios_base::ate);
 	if(!inputFile) {
 		cout<< "cannot open the hard disk"<<endl; 
 		exit(1);
@@ -95,20 +96,34 @@ bool SortIterator:: internalSort() {
 			char data[read_size];
 			int read_block = block_left / read_size > 0 ? read_size: block_left;
 			inputFile.read(data, read_block);
-			cout<<"data: "<<data<<endl;
 			_produced = _produced + read_block / _recsize;
 			outputFile.write(data, read_block);	
 			block_left = block_left - read_block;
 		}
 		outputFile.close();
-		//TODO: internal sort using ram data
+		//Internal sort using ram data
 		arr = read_ramfile("DRAM.txt");
 		quickSort(arr, customComparator);
-		// if(flag == 0){
 		write_ramfile("DRAM.txt", arr);
 
-		
-		// flag = 1;
+        //Uncomment for calling testing methods with appropriate filenames
+
+		//Verification of sort order
+		/*const std::string outputFileName = "testfile.txt";
+		 size_t chunkSize = 1024 * 1024; 
+		 processFileInChunks(outputFileName, chunkSize);
+
+	    //Verification of records
+	    std::bitset<1000000> inputBitmap = createBitmap("testfile.txt");
+        std::bitset<1000000> outputBitmap = createBitmap("testfile1.txt");
+
+        if (verifyRecords(inputBitmap, outputBitmap)) {
+           std::cout << "Verification Successful\n";
+        } else {
+           std::cout << "Verification Failed\n";
+        }*/
+
+
 		if(!copyRamToHDD()) exit(1);
 	}
 	_produced = 0;
@@ -117,7 +132,7 @@ bool SortIterator:: internalSort() {
 
 bool SortIterator:: copyRamToHDD() {
 	ifstream inputFile("DRAM.txt");
-    ofstream outputHDDFile("HDD2.txt", ios::app);
+    ofstream outputHDDFile("HDD2.txt", ios_base::app);
 	if(inputFile.is_open() && outputHDDFile.is_open()) {
 		outputHDDFile<<inputFile.rdbuf();
 		inputFile.close();

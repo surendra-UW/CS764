@@ -31,7 +31,6 @@ std::vector<RecordStructure> read_ramfile(char *inputfile){
     std::string line;
     
     while (std::getline(input_file, line)) {
-        cout<<line<<endl;
         std::istringstream ss(line);
         std::string token;
         RecordStructure record;

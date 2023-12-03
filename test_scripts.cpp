@@ -1,69 +1,85 @@
 #include <iostream>
 #include <fstream>
-#include <string>
-#include "Sort.h"
-#include <stdlib.h>
-#include <set>
-#include <unordered_set>
-#include <limits>
-#include "internal_sort.h"
+#include <sstream>
+#include <vector>
+#include <bitset>
+#include <cstdint>
+#include <functional>
+#include <algorithm>
+#include "RecordStructure.h"
 
-using namespace std;
+// Hash function for RecordStructure
+size_t hash_function(const RecordStructure& record) {
+        return record.member1;
+}
 
-
-//Verification of sets of rows and values
-bool verifySets(char *inputFile, char *outputFile) {
-    std::ifstream input(inputFile);
-    std::ifstream output(outputFile);
-
-    if (!input.is_open() || !output.is_open()) {
-        std::cerr << "Error opening files." << std::endl;
-        return false;
+bool verifySortOrder(const std::vector<RecordStructure>& records) {
+    for (size_t i = 1; i < records.size(); ++i) {
+        if (records[i].member1 < records[i - 1].member1) {
+            return false; // Sort order violation
+        }
     }
+    return true; // Sort order verified
+}
 
-    std::set<std::string> inputRows;
+void processFileInChunks(const std::string& filename, size_t chunkSize) {
+    std::ifstream file(filename);
+    std::vector<RecordStructure> currentChunk;
+    std::string line;
 
-    // Read rows from input file and insert into the set
-    std::string inputRow;
-    while (std::getline(input, inputRow)) {
-        inputRows.insert(inputRow);
-    }
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        RecordStructure record;
+        char comma;
 
-    // Check if each row in the output file exists in the set
-    std::string outputRow;
-    while (std::getline(output, outputRow)) {
-        if (inputRows.find(outputRow) == inputRows.end()) {
-            std::cerr << "Mismatch found: Row in output file not present in input file." << std::endl;
-            return false;
+        if (!(iss >> record.member1 >> comma >> record.member2 >> comma >> record.member3 >> comma >> record.member4)) {
+            std::cerr << "Error parsing line in input file.\n";
+            return;
+        }
+
+        currentChunk.push_back(record);
+
+        if (currentChunk.size() >= chunkSize) {
+            // Verify the current chunk
+            if (!verifySortOrder(currentChunk)) {
+                std::cout << "Sort order violation in chunk.\n";
+                return;
+            }
+
+            // Discard the current chunk from memory
+            currentChunk.clear();
         }
     }
 
-    std::cout << "Sets of rows and values verified successfully." << std::endl;
-    return true;
-}
-
-//Verification of Sort order
-bool verifySortOrder(char *outputFile) {
-    std::ifstream output(outputFile);
-
-    if (!output.is_open()) {
-        std::cerr << "Error opening file." << std::endl;
-        return false;
+    // Verify the last chunk (if any)
+    if (!currentChunk.empty() && !verifySortOrder(currentChunk)) {
+        std::cout << "Sort order violation in the last chunk.\n";
+        return;
     }
 
-    int previousValue = std::numeric_limits<int>::min();
-    int currentValue;
+    std::cout << "Sort order verified for the entire file.\n";
+}
 
-    // Check if a[i] >= a[i-1] for each value in the output file
-    while (output >> currentValue) {
-        if (currentValue < previousValue) {
-            std::cerr << "Sort order mismatch found." << std::endl;
-            return false;
+// Function to read a file and create a bitmap
+std::bitset<1000000> createBitmap(const std::string& filename) {
+    std::ifstream file(filename);
+    std::bitset<1000000> bitmap;
+    std::string line;
+    int i=1;
+
+     RecordStructure record;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        char comma;
+        if ((iss >> record.member1 >> comma >> record.member2 >> comma >> record.member3 >> comma >> record.member4)) {
+             size_t hashValue = hash_function(record);
+             bitmap.set(hashValue % 1000000, true); 
         }
-        previousValue = currentValue;
-    }
-
-    std::cout << "Sort order verified successfully." << std::endl;
-    return true;
+}
+return bitmap;
 }
 
+// Function to verify records
+bool verifyRecords(const std::bitset<1000000>& inputBitmap, const std::bitset<1000000>& outputBitmap) {
+    return (inputBitmap == outputBitmap);
+}
