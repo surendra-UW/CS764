@@ -1,9 +1,10 @@
 #pragma once
+#include <queue>
 #include "TournamentTreeNode.h"
 
 FILE *openFile(char *fileName, char *mode);
 
-void mergeFiles(char *output_file, int n, int k);
+void mergeFiles(vector<queue<RecordStructure> > in, char *output_file, int n, int k);
 
 void createInitialRuns(char *input_file, int run_size, int num_ways);
 
