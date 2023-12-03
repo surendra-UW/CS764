@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <queue>
 #include "RecordStructure.h"
 #include "TournamentTree.h"
 using namespace std;
@@ -324,25 +325,25 @@ FILE *openFile(char *fileName, char *mode)
     return fp;
 }
 
-void readNextValueFromRun(FILE *in[], int k, int run_id, TournamentTreeNode *tournamentTree)
+void readNextValueFromRun(vector<queue<RecordStructure> > in, int k, int run_id, TournamentTreeNode *tournamentTree)
 {
 
     // Note the runId needs to be set explicitly here
     tournamentTree[k + run_id].offsetValueCode = -1;
     tournamentTree[k + run_id].offset = 0;
 
-    if (fscanf(in[run_id], "%d,%d,%d,%d,%d",
-               &tournamentTree[k + run_id].element.members[0],
-               &tournamentTree[k + run_id].element.members[1],
-               &tournamentTree[k + run_id].element.members[2],
-               &tournamentTree[k + run_id].element.members[3],
-               &tournamentTree[k + run_id].element.members[4]) != 5)
-        return;
+    if (in[run_id].empty() == false)
+    {
+        tournamentTree[k + run_id].element = in[run_id].front();
+        tournamentTree[k + run_id].runId = run_id;
+        in[run_id].pop();
+    }
+
     printf("\nNew value read = %d ", tournamentTree[k + run_id].element.members[0]);
     printf("Its offset = %d", tournamentTree[k + run_id].offsetValueCode);
 }
 
-void performTreeOfLosersSort(FILE *in[], TournamentTree tt, int k)
+void performTreeOfLosersSort(vector<queue<RecordStructure> > in, TournamentTree tt, int k)
 {
     TournamentTreeNode *tournamentTree = tt.getTree();
     while (tournamentTree[0].element.members[0] != INT_MAX)
@@ -363,15 +364,16 @@ void performTreeOfLosersSort(FILE *in[], TournamentTree tt, int k)
     }
 }
 
-void mergeFiles(char *output_file, int n, int k)
+void mergeFiles(vector<queue<RecordStructure> > in, char *output_file, int n, int k)
 {
-    FILE *in[k];
-    for (int i = 0; i < k; i++)
-    {
-        char fileName[10];
-        snprintf(fileName, sizeof(fileName), "run-%d", i);
-        in[i] = openFile(fileName, "r");
-    }
+    // FILE *in[k];
+
+    // for (int i = 0; i < k; i++)
+    // {
+    //     char fileName[10];
+    //     snprintf(fileName, sizeof(fileName), "run-%d", i);
+    //     in[i] = openFile(fileName, "r");
+    // }
 
     FILE *out = openFile(output_file, "w");
 
@@ -387,15 +389,16 @@ void mergeFiles(char *output_file, int n, int k)
         // break if no output file is empty and
         // index i will be no. of input files
         int run_index_in_tree = k + i;
-        if (fscanf(in[i], "%d,%d,%d,%d,%d",
-                   &tournamentTree[run_index_in_tree].element.members[0],
-                   &tournamentTree[run_index_in_tree].element.members[1],
-                   &tournamentTree[run_index_in_tree].element.members[2],
-                   &tournamentTree[run_index_in_tree].element.members[3],
-                   &tournamentTree[run_index_in_tree].element.members[4]) != 5)
-            break;
-
-        tournamentTree[run_index_in_tree].runId = i;
+        if (in[i].empty() == false)
+        {
+            tournamentTree[run_index_in_tree].element = in[i].front();
+            tournamentTree[run_index_in_tree].runId = i;
+            in[i].pop();
+        }
+        else
+        {
+            // load data into this cache_array for run i
+        }
     }
 
     TournamentTree tt(tournamentTree, 2 * k);
@@ -418,8 +421,8 @@ void mergeFiles(char *output_file, int n, int k)
     // tt.printTreeOfLosers();
     // return;
 
-    for (int i = 0; i < k; i++)
-        fclose(in[i]);
+    // for (int i = 0; i < k; i++)
+    //     fclose(in[i]);
 
     fclose(out);
 }
@@ -473,6 +476,16 @@ void createInitialRuns(char *input_file, int run_size, int num_ways)
 
 void externalSort(char *input_file, char *output_file, int num_ways, int run_size)
 {
-    createInitialRuns(input_file, run_size, num_ways);
-    mergeFiles(output_file, run_size, num_ways);
+    // createInitialRuns(input_file, run_size, num_ways);
+    // Convert the cache.txt file to array and pass to below function
+    vector<queue<RecordStructure> > cache_array;
+    for (int i = 0; i < num_ways; i++)
+    {
+        cache_array.push_back(queue<RecordStructure>());
+    }
+    /*
+        cache_array[i] = vector<RecordStructure> -> stores records of the ith partition
+        cache_array[i][j] -> stores an individual record
+    */
+    mergeFiles(cache_array, output_file, run_size, num_ways);
 }
