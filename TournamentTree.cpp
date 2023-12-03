@@ -1,7 +1,12 @@
 #include <bits/stdc++.h>
 #include <queue>
+#include "Sort.h"
 #include "RecordStructure.h"
 #include "TournamentTree.h"
+#include "Cache.h"
+#include "constants.h"
+#include "defs.h"
+
 using namespace std;
 
 // int TournamentTree::left(int i) { return (2 * i); }
@@ -274,7 +279,7 @@ FILE *openFile(char *fileName, char *mode)
     return fp;
 }
 
-void readNextValueFromRun(vector<queue<RecordStructure>> in, int k, int run_id, TournamentTreeNode *tournamentTree)
+void readNextValueFromRun(Cache c, vector<queue<RecordStructure>> in, int k, int run_id, TournamentTreeNode *tournamentTree)
 {
 
     // Note the runId needs to be set explicitly here
@@ -287,12 +292,17 @@ void readNextValueFromRun(vector<queue<RecordStructure>> in, int k, int run_id, 
         tournamentTree[k + run_id].runId = run_id;
         in[run_id].pop();
     }
+    else
+    {
+        // load data into this cache_array for run i
+        in[run_id] = c.loadDataForRun(run_id);
+    }
 
     printf("\nNew value read = %d ", tournamentTree[k + run_id].element.members[0]);
     printf("Its offset = %d", tournamentTree[k + run_id].offsetValueCode);
 }
 
-void performTreeOfLosersSort(vector<queue<RecordStructure>> in, TournamentTree tt, int k)
+void performTreeOfLosersSort(Cache c, vector<queue<RecordStructure>> in, TournamentTree tt, int k)
 {
     TournamentTreeNode *tournamentTree = tt.getTree();
     while (tournamentTree[0].element.members[0] != INT_MAX)
@@ -300,7 +310,7 @@ void performTreeOfLosersSort(vector<queue<RecordStructure>> in, TournamentTree t
         // TODO: Write this record to output file
         printf("Value written to output file\t=\t%d\n", tournamentTree[0].element.members[0]);
 
-        readNextValueFromRun(in, k, tournamentTree[0].runId, tournamentTree);
+        readNextValueFromRun(c, in, k, tournamentTree[0].runId, tournamentTree);
 
         printf("Printing Tree before UPDATING THE STRUCTURE\n");
         tt.printTreeOfLosers();
@@ -313,7 +323,7 @@ void performTreeOfLosersSort(vector<queue<RecordStructure>> in, TournamentTree t
     }
 }
 
-void mergeFiles(vector<queue<RecordStructure>> in, char *output_file, int n, int k)
+void mergeFiles(Cache c, vector<queue<RecordStructure>> in, char *output_file, int k)
 {
     // FILE *in[k];
 
@@ -347,6 +357,7 @@ void mergeFiles(vector<queue<RecordStructure>> in, char *output_file, int n, int
         else
         {
             // load data into this cache_array for run i
+            in[i] = c.loadDataForRun(i);
         }
     }
 
@@ -366,27 +377,23 @@ void mergeFiles(vector<queue<RecordStructure>> in, char *output_file, int n, int
     tt.initialPop(1);
     // tt.printTreeOfLosers();
 
-    performTreeOfLosersSort(in, tt, k);
-    // tt.printTreeOfLosers();
-    // return;
-
-    // for (int i = 0; i < k; i++)
-    //     fclose(in[i]);
-
+    performTreeOfLosersSort(c, in, tt, k);
     fclose(out);
 }
 
-void externalSort(char *input_file, char *output_file, int num_ways, int run_size)
+void externalSort(Cache c, char *input_file, char *output_file, int num_ways)
 {
     // Convert the cache.txt file to array and pass to below function
     vector<queue<RecordStructure>> cache_array;
     for (int i = 0; i < num_ways; i++)
     {
-        cache_array.push_back(queue<RecordStructure>());
+        // cache_array.push_back(queue<RecordStructure>());
+        cache_array[i] = c.loadDataForRun(i);
     }
+
     /*
         cache_array[i] = vector<RecordStructure> -> stores records of the ith partition
         cache_array[i][j] -> stores an individual record
     */
-    mergeFiles(cache_array, output_file, run_size, num_ways);
+    mergeFiles(c, cache_array, output_file, num_ways);
 }

@@ -1,10 +1,8 @@
-#include <stdio.h>
-#include <fstream>
-#include <string>
-#include <iostream>
+
 #include "constants.h"
 #include "Cache.h"
 #include "defs.h"
+#include "RecordStructure.h"
 
 using namespace std;
 
@@ -16,6 +14,57 @@ void fileOpenCheck(StreamType &file, string fileName)
         printf("cannot open the file %s exiting...\n", fileName.c_str());
         exit(EXIT_FAILURE);
     }
+}
+
+queue<RecordStructure> Cache::loadDataForRun(int runId)
+{
+    read(runId, rounded_cache_block);
+    ifstream inputFile(CACHE_FILE_NAME);
+    fileOpenCheck(inputFile, CACHE_FILE_NAME);
+    int startOffset = cache_partition_offsets[runId][0]; // Replace with your desired starting offset
+    int endOffset = cache_partition_offsets[runId][1];   // Replace with your desired ending offset
+
+    // Move the file pointer to the starting offset
+    inputFile.seekg(startOffset, ios::beg);
+
+    // Calculate the number of bytes to read
+    int bytesToRead = endOffset - startOffset;
+
+    // Allocate memory to store the read data
+    char *buffer = new char[bytesToRead];
+
+    // Read the specified range of bytes from the file
+    inputFile.read(buffer, bytesToRead);
+
+    int i = 0, j = 0;
+    queue<RecordStructure> records_in_run;
+    RecordStructure record;
+    while (buffer[i] != '\0')
+    {
+        if (buffer[i] != '\n')
+        {
+            if (buffer[i] == ',')
+            {
+                i++;
+                continue;
+            }
+
+            record.members[j] = int(buffer[i]) - 48;
+            j++;
+            // cout << buffer[i];
+        }
+        else
+        {
+            records_in_run.push(record);
+            j = 0;
+            // cout << endl;
+        }
+        i++;
+    }
+    records_in_run.push(record);
+    // Clean up
+    delete[] buffer;
+    inputFile.close();
 }
 
 int Cache::read(int partition, uint64_t block_size)
@@ -30,10 +79,18 @@ int Cache::read(int partition, uint64_t block_size)
     else if (records_in_partition[partition] < records_to_consume)
     {
         records_to_consume = records_in_partition[partition];
+        // records_to_consume denotes the number of records in a partition.
+        // save this
+        // so in the file seekg
+        // block_size is the amount of data to read
+        // so basically read from partition_size * partition to partition_size * partition + block_size
         block_size = records_to_consume * recordsize;
     }
 
     uint partition_size = RoundDown(CACHE_SIZE_IN_BYTES / _NWAY, recordsize);
+    cache_partition_offsets[partition][0] = partition_size * partition;
+    cache_partition_offsets[partition][1] = partition_size * partition + block_size;
+
     ifstream inputFile(DRAM_FILE_NAME);
     fstream cacheFile(CACHE_FILE_NAME, ios::in | ios::out);
     fileOpenCheck(inputFile, DRAM_FILE_NAME);

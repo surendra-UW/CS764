@@ -1,13 +1,15 @@
 #pragma once
-#include <queue>
+
+#include "Cache.h"
 #include "TournamentTreeNode.h"
+
 using namespace std;
 
 FILE *openFile(char *fileName, char *mode);
 
-void mergeFiles(vector<queue<RecordStructure>> in, char *output_file, int n, int k);
+void mergeFiles(Cache c, vector<queue<RecordStructure>> in, char *output_file, int k);
 
-void externalSort(char *input_file, char *output_file, int num_ways, int run_size);
+void externalSort(Cache c, char *input_file, char *output_file, int num_ways);
 class TournamentTree
 {
     TournamentTreeNode *tournamentTree;

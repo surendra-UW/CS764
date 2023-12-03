@@ -1,11 +1,9 @@
-#include <iostream>
-#include <fstream>
-#include <string>
+
 #include "defs.h"
 #include "Sort.h"
-#include <stdlib.h>
+
 #include "constants.h"
-#include "Cache.h"
+// #include "Cache.h"
 #include "DRAM.h"
 #include "SSD.h"
 #include "internal_sort.h"
@@ -135,6 +133,16 @@ bool SortIterator::copyRamToHDD()
 	return true;
 }
 
+int SortIterator::getBatches()
+{
+	return batches;
+}
+
+int SortIterator::getRecordSize()
+{
+	return _recsize;
+}
+
 int SortIterator::externalMerge()
 {
 
@@ -145,15 +153,14 @@ int SortIterator::externalMerge()
 
 	DRAM dram_merge(batches);
 	Cache cache_merge(batches);
-
+	cache_merge.rounded_cache_block = rounded_cache_block;
 	for (int i = 0; i < batches; i++)
 	{
 		dram_merge.read(i, rounded_dram_block);
 		cache_merge.read(i, rounded_cache_block);
 	}
-	// int totalSteps = 0; // this is the #records in a particular run
-	// vector<RecordStructure> cache_array = read_ramfile("CACHE.txt");
-	// externalSort("CACHE.txt", "CACHE_SORTED_TEST.txt", NWAY_MERGE, totalSteps);
+
+	externalSort(cache_merge, "CACHE.txt", "CACHE_SORTED_TEST.txt", NWAY_MERGE);
 }
 
 // uint SortIterator::blockLeftToMerge(Cache cache, DRAM dram, int partition) {
