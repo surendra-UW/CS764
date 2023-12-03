@@ -1,19 +1,22 @@
 #pragma once
 
 #include "Cache.h"
+#include "DRAM.h"
 #include "TournamentTreeNode.h"
 
 using namespace std;
 
 FILE *openFile(char *fileName, char *mode);
 
-void mergeFiles(Cache c, vector<queue<RecordStructure>> in, int k);
+void mergeFiles(DRAM d, Cache c, vector<queue<RecordStructure>> in, int k);
 
-void externalSort(Cache c, int num_ways);
+void externalSort(DRAM d, Cache c, int num_ways);
 class TournamentTree
 {
     TournamentTreeNode *tournamentTree;
     int num_nodes;
+    Cache c;
+    DRAM d;
 
 public:
     int left(int i);
@@ -37,5 +40,7 @@ public:
     void updateTreeStructure(TournamentTreeNode node, int parent_index, TournamentTreeNode parent);
     TournamentTreeNode *getTree();
     TournamentTreeNode getMin();
-    TournamentTree(TournamentTreeNode a[], int size);
+    TournamentTree(TournamentTreeNode a[], int size, DRAM d, Cache c);
+    void performTreeOfLosersSort(vector<queue<RecordStructure>> in, int k);
+    void readNextValueFromRun(vector<queue<RecordStructure>> in, int k, int run_id);
 };

@@ -6,15 +6,13 @@
 #include "SSD.h"
 using namespace std;
 
-
-int SSD::read(int partition, uint64_t block_size) {
-    
+int SSD::read(int partition)
+{
 }
 
-void SSD::write() {
-
+void SSD::write()
+{
 }
-
 
 SSD::SSD()
 {
@@ -27,27 +25,29 @@ SSD::SSD(int NWAY) : _NWAY(NWAY)
     readOffsets = new streamoff[NWAY];
     for (int i = 0; i < NWAY; i++)
         readOffsets[i] = 0;
-    SSD();
+    max_partition_size = RoundDown(SSD_SIZE_IN_BYTES / NWAY, recordsize);
 }
 
-SSD:: ~SSD()
+SSD::~SSD()
 {
 }
 
-streamoff SSD:: getOffset(int partition) {
+streamoff SSD::getOffset(int partition)
+{
     return readOffsets[partition];
 }
 
-void SSD:: setOffset (int partition, streamoff offset) {
+void SSD::setOffset(int partition, streamoff offset)
+{
     readOffsets[partition] = offset;
 }
-//check if file is open if not exit
+// check if file is open if not exit
 template <typename StreamType>
-void fileOpenCheck(StreamType& file, string fileName)
+void fileOpenCheck(StreamType &file, string fileName)
 {
-	if (!file || !file.is_open())
-	{
-		printf("cannot open the file %s exiting...\n", fileName.c_str());
-		exit(EXIT_FAILURE);
-	}
+    if (!file || !file.is_open())
+    {
+        printf("cannot open the file %s exiting...\n", fileName.c_str());
+        exit(EXIT_FAILURE);
+    }
 }

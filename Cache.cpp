@@ -16,9 +16,13 @@ void fileOpenCheck(StreamType &file, string fileName)
     }
 }
 
+int *Cache::getCachePartitionOffsets(int runId)
+{
+    return cache_partition_offsets[runId];
+}
+
 queue<RecordStructure> Cache::loadDataForRun(int runId)
 {
-    read(runId, rounded_cache_block);
     ifstream inputFile(CACHE_FILE_NAME);
     fileOpenCheck(inputFile, CACHE_FILE_NAME);
     int startOffset = cache_partition_offsets[runId][0]; // Replace with your desired starting offset
@@ -65,11 +69,12 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
     // Clean up
     delete[] buffer;
     inputFile.close();
+    return records_in_run;
 }
 
-int Cache::read(int partition, uint64_t block_size)
+int Cache::read(int partition)
 {
-    uint32_t records_to_consume = block_size / recordsize;
+    uint32_t records_to_consume = max_partition_size / recordsize;
 
     // check the records count left in SSD in this partition
     if (records_in_partition[partition] == 0)
@@ -82,14 +87,14 @@ int Cache::read(int partition, uint64_t block_size)
         // records_to_consume denotes the number of records in a partition.
         // save this
         // so in the file seekg
-        // block_size is the amount of data to read
-        // so basically read from partition_size * partition to partition_size * partition + block_size
-        block_size = records_to_consume * recordsize;
+        // max_partition_size is the amount of data to read
+        // so basically read from partition_size * partition to partition_size * partition + max_partition_size
+        max_partition_size = records_to_consume * recordsize;
     }
 
     uint partition_size = RoundDown(CACHE_SIZE_IN_BYTES / _NWAY, recordsize);
     cache_partition_offsets[partition][0] = partition_size * partition;
-    cache_partition_offsets[partition][1] = partition_size * partition + block_size;
+    cache_partition_offsets[partition][1] = partition_size * partition + max_partition_size;
 
     ifstream inputFile(DRAM_FILE_NAME);
     fstream cacheFile(CACHE_FILE_NAME, ios::in | ios::out);
@@ -100,16 +105,16 @@ int Cache::read(int partition, uint64_t block_size)
     /* Loading into ram in the 1MB chunks*/
     const int load_size = 1 << 10;
     char readBuffer[load_size];
-    while (block_size > 0 && !inputFile.eof())
+    while (max_partition_size > 0 && !inputFile.eof())
     {
-        int read_block = block_size > load_size ? load_size : block_size;
+        int read_block = max_partition_size > load_size ? load_size : max_partition_size;
         inputFile.read(readBuffer, read_block);
         if (!read_block)
         {
             cout << "read null" << endl;
         }
         cacheFile.write(readBuffer, read_block);
-        block_size -= read_block;
+        max_partition_size -= read_block;
     }
     readOffsets[partition] = inputFile.tellg();
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
@@ -124,6 +129,7 @@ Cache::Cache(int NWAY) : _NWAY(NWAY)
     uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES / NWAY, recordsize);
     uint32_t max_records = partition_size / recordsize;
 
+    max_partition_size = RoundDown(CACHE_SIZE_IN_BYTES / NWAY, recordsize);
     readOffsets = new streamoff[NWAY];
     records_in_partition = new uint32_t[NWAY];
     for (int i = 0; i < NWAY; i++)
