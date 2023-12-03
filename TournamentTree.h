@@ -1,6 +1,7 @@
 #pragma once
 #include <queue>
 #include "TournamentTreeNode.h"
+using namespace std;
 
 FILE *openFile(char *fileName, char *mode);
 
