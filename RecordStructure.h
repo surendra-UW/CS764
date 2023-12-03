@@ -1,13 +1,7 @@
-#include <cstdint>
 #pragma once
-
+#define FIELD_COUNT 4
 
 struct RecordStructure
 {
-    uint64_t member1;
-    uint64_t member2;
-    uint64_t member3;
-    uint64_t member4;
-    // Add other members as needed
+    uint64_t members[FIELD_COUNT];
 };
-
