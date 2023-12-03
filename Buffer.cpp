@@ -38,7 +38,7 @@ bool Buffer::read(RecordStructure &value) {
         tail = (tail + 1) % size;
         return true;
     } else{
-        load(hierarchy);
+        // load(hierarchy);
     }
     return false; // Buffer is empty
 }
