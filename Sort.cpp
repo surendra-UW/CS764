@@ -4,11 +4,11 @@
 
 #include "constants.h"
 // #include "Cache.h"
-#include "DRAM.h"
-#include "SSD.h"
+
 #include "internal_sort.h"
 #include "TournamentTree.h"
-
+#include "DRAM.h"
+#include "SSD.h"
 using namespace std;
 
 #define HDD_PAGE_SIZE 1024
@@ -38,9 +38,9 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	TRACE(true);
 
 	// TODO: hard coding and commenting records generation
-	while (_input->next())
-		++_consumed;
-	// _consumed = 22690;
+	// while (_input->next())
+	// 	++_consumed;
+	_consumed = 13258810;
 	delete _input;
 
 	ifstream inputFile("HDD.txt", ios::binary | ios::ate);
@@ -73,8 +73,8 @@ SortIterator::~SortIterator()
 bool SortIterator::next()
 {
 	TRACE(true);
-	if (_produced >= _consumed)
-		return false;
+	// if (_produced >= _consumed)
+	// 	return false;
 
 	externalMerge();
 
@@ -145,7 +145,7 @@ int SortIterator::getRecordSize()
 
 int SortIterator::externalMerge()
 {
-
+	TRACE(true);
 	uint64_t dram_partition_size = DRAM_SIZE_IN_BYTES / batches;
 	uint64_t rounded_dram_block = RoundDown(dram_partition_size, _recsize);
 	uint32_t cache_partition_size = CACHE_SIZE_IN_BYTES / batches;

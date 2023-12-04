@@ -1,5 +1,7 @@
 #pragma once
 #include "Memory.h"
+#include "RecordStructure.h"
+#include "defs.h"
 
 using namespace std;
 

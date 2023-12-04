@@ -19,7 +19,7 @@ void fileOpenCheck(StreamType &file, string fileName)
 
 int DRAM::read(int partition)
 {
-
+    TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
 
     // check the records count left in SSD in this partition
@@ -84,6 +84,8 @@ DRAM::DRAM(int NWAY) : _NWAY(NWAY)
     streamoff partition_size = RoundDown(DRAM_SIZE_IN_BYTES, recordsize);
     uint32_t max_records = partition_size / recordsize;
     max_partition_size = RoundDown(DRAM_SIZE_IN_BYTES / NWAY, recordsize);
+    TRACE(true);
+    cout << "Max partition size of DRAM = " << max_partition_size << endl;
 
     for (int i = 0; i < NWAY; i++)
     {

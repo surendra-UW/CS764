@@ -74,6 +74,7 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
 
 int Cache::read(int partition)
 {
+    TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
 
     // check the records count left in SSD in this partition

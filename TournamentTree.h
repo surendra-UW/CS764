@@ -43,4 +43,6 @@ public:
     TournamentTree(TournamentTreeNode a[], int size, DRAM d, Cache c);
     void performTreeOfLosersSort(vector<queue<RecordStructure>> in, int k);
     void readNextValueFromRun(vector<queue<RecordStructure>> in, int k, int run_id);
+    void readNextValueFromRunUtil(vector<queue<RecordStructure>> in, int k, int run_id);
+    TournamentTree();
 };
