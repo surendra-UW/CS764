@@ -46,7 +46,7 @@ void TournamentTree::printTreeOfLosers()
 {
     for (int i = 0; i < num_nodes; i++)
     {
-        printf("%d\t%d\t%d\n", i, tournamentTree[i].element.members[0], tournamentTree[i].runId);
+        printf("%d\t%llu\t%d\n", i, tournamentTree[i].element.members[0], tournamentTree[i].runId);
     }
 }
 
@@ -219,6 +219,8 @@ bool TournamentTree::isLeftLesserThanRight(int left, int right, bool &computeNew
         Do full comparison
         Compute OVC of loser w.r.t winner
     */
+   //TODO:
+   return false;
 }
 
 void TournamentTree::compareInitialNodes()
@@ -311,7 +313,7 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > i
                 // TODO: SSD Logic - For final merge step
                 // All the data in this run has been read.
                 // Pass late fence - NULL vector/ empty vector for termination of the run
-                RecordStructure lateFence = {99999999, 99999999, 99999999};
+                RecordStructure lateFence = {(uint64_t)999999999999, 99999999, 99999999};
                 in[run_id].push(lateFence);
                 return;
             }
@@ -327,49 +329,30 @@ void TournamentTree::readNextValueFromRun(vector<queue<RecordStructure> > in, in
     tournamentTree[k + run_id].offsetValueCode = -1;
     tournamentTree[k + run_id].offset = 0;
     readNextValueFromRunUtil(in, k, run_id);
-    printf("\nNew value read = %d ", tournamentTree[k + run_id].element.members[0]);
-    printf("Its offset = %d", tournamentTree[k + run_id].offsetValueCode);
+    printf("\nNew value read = %llu ", tournamentTree[k + run_id].element.members[0]);
+    printf("Its offset = %llu", tournamentTree[k + run_id].offsetValueCode);
 }
 
-void appendDataToDestination(char *sourceFilePath, char *destinationFilePath)
+void appendDataToDestination(string sourceFilePath, string destinationFilePath)
 {
-    FILE *sourceFile = fopen(sourceFilePath, "r");
-    FILE *destinationFile = fopen(destinationFilePath, "a");
-
-    if (sourceFile && destinationFile)
-    {
-        // Move to the end of the destination file
-        fseek(destinationFile, 0, SEEK_END);
-
-        // Get the current position, which is the size of the destination file
-        long currentPosition = ftell(destinationFile);
-        cout << "Current Position in destination = " << currentPosition << endl;
-        // Move back to the beginning of the source file
-        fseek(sourceFile, 0, SEEK_SET);
-        fputc('\n', destinationFile);
-        // Read and write in chunks to avoid overwriting existing data in destination file
-        char buffer[1024];
-        size_t bytesRead;
-
-        while ((bytesRead = fread(buffer, 1, sizeof(buffer), sourceFile)) > 0)
-        {
-            fwrite(buffer, 1, bytesRead, destinationFile);
-        }
-
-        printf("File appended successfully.\n");
-
-        fclose(sourceFile);
-        fclose(destinationFile);
-    }
-    else
-    {
-        printf("Error opening files.\n");
-    }
+    ifstream inputFile(sourceFilePath);
+	ofstream outputFile(destinationFilePath, ios::app);
+	if (inputFile.is_open() && outputFile.is_open())
+	{
+		outputFile << inputFile.rdbuf();
+		inputFile.close();
+		outputFile.close();
+		// clearRam();
+	}
+	else
+	{
+		cout << "cannot open files to evict output data" << endl;
+	}
 }
 
-bool isFileFull(char *filePath, long sizeToCheck)
+bool isFileFull(string filePath, long sizeToCheck)
 {
-    FILE *file = fopen(filePath, "r");
+    FILE *file = fopen(filePath.c_str(), "r");
     if (file)
     {
         // Move to the end of the file
@@ -378,9 +361,9 @@ bool isFileFull(char *filePath, long sizeToCheck)
         // Get the current position, which is the size of the file
         long size = ftell(file);
 
-        if (size == sizeToCheck)
+        if (size >= sizeToCheck)
         {
-            printf("File size is exactly %d.\n", sizeToCheck);
+            printf("File size is exactly %llu.\n", sizeToCheck);
             fclose(file);
             return true;
         }
@@ -388,7 +371,7 @@ bool isFileFull(char *filePath, long sizeToCheck)
         {
             cout << "Size = " << size << endl;
 
-            printf("File does not exist or its size is not 8KB.\n");
+            printf("size is not 8KB.\n");
         }
         fclose(file);
     }
@@ -397,19 +380,13 @@ bool isFileFull(char *filePath, long sizeToCheck)
         printf("Error opening the file.\n");
     }
 
-    return 0;
+    return false;
 }
 
-void truncateFile(char *sourceFile)
+void truncateFile(string sourceFile)
 {
-    if (truncate(sourceFile, 0) == 0)
-    {
-        printf("Source file truncated.\n");
-    }
-    else
-    {
-        printf("Error truncating source file.\n");
-    }
+    ofstream clearFile(sourceFile, ofstream::trunc);
+    clearFile.close();
 }
 
 void writeSortedRecordToFile(RecordStructure rs)
@@ -435,8 +412,8 @@ void writeSortedRecordToFile(RecordStructure rs)
         appendDataToDestination("out/DRAM_OUT.txt", "out/SSD_OUT.txt");
         truncateFile("out/DRAM_OUT.txt");
     }
-    FILE *file = fopen("out/DRAM_OUT.txt", "w");
-    fprintf(file, "%d,%d,%d,%d\n", rs.members[0], rs.members[1], rs.members[2], rs.members[3]);
+    FILE *file = fopen("out/DRAM_OUT.txt", "a");
+    fprintf(file, "%llu,%llu,%llu,%llu\n", rs.members[0], rs.members[1], rs.members[2], rs.members[3]);
     fclose(file);
 }
 
@@ -445,7 +422,7 @@ void TournamentTree::performTreeOfLosersSort(vector< queue<RecordStructure> > in
     // TournamentTreeNode *tournamentTree = getTree();
     while (tournamentTree[0].element.members[0] != 99999999) // TODO: Handle the late fence case
     {
-        printf("Value written to output file\t=\t%d\n", tournamentTree[0].element.members[0]);
+        printf("Value written to output file\t=\t%llu\n", tournamentTree[0].element.members[0]);
         writeSortedRecordToFile(tournamentTree[0].element);
         readNextValueFromRun(in, k, tournamentTree[0].runId);
 
