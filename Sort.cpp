@@ -40,7 +40,7 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	// TODO: hard coding and commenting records generation
 	// while (_input->next())
 	// 	++_consumed;
-	_consumed = 13258810;
+	_consumed = 3616612;
 	delete _input;
 
 	ifstream inputFile("HDD.txt", ios::binary | ios::ate);
@@ -104,7 +104,8 @@ bool SortIterator::internalSort()
 		arr = read_ramfile("DRAM.txt");
 		quickSort(arr, customComparator);
 		write_ramfile("DRAM.txt", arr);
-		arr.resize(0);
+		arr.clear(); // Remove all elements
+		arr.shrink_to_fit();
 		_produced = _produced + recordsToConsume;
 		if (!copyRamToHDD())
 			exit(1);
@@ -146,21 +147,25 @@ int SortIterator::getRecordSize()
 int SortIterator::externalMerge()
 {
 	TRACE(true);
-	uint64_t dram_partition_size = DRAM_SIZE_IN_BYTES / batches;
-	uint64_t rounded_dram_block = RoundDown(dram_partition_size, _recsize);
-	uint32_t cache_partition_size = CACHE_SIZE_IN_BYTES / batches;
-	uint32_t rounded_cache_block = RoundDown(cache_partition_size, _recsize);
+	// uint64_t dram_partition_size = DRAM_SIZE_IN_BYTES / batches;
+	// uint64_t rounded_dram_block = RoundDown(dram_partition_size, _recsize);
+	// uint32_t cache_partition_size = CACHE_SIZE_IN_BYTES / batches;
+	// uint32_t rounded_cache_block = RoundDown(cache_partition_size, _recsize);
 
+	//load dram all partitions
 	DRAM dram_merge(batches);
-	Cache cache_merge(batches);
-
 	for (int i = 0; i < batches; i++)
 	{
 		dram_merge.read(i);
-		cache_merge.read(i);
 	}
 
-	externalSort(dram_merge, cache_merge, NWAY_MERGE);
+	//load cache all partitions
+	Cache cache_merge(batches);
+	for (int i = 0; i < batches; i++)
+	{
+		cache_merge.read(i);
+	}
+	externalSort(dram_merge, cache_merge, batches);
 }
 
 // uint SortIterator::blockLeftToMerge(Cache cache, DRAM dram, int partition) {

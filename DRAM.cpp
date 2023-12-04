@@ -30,9 +30,8 @@ int DRAM::read(int partition)
     else if (records_in_partition[partition] < records_to_consume)
     {
         records_to_consume = records_in_partition[partition];
-        max_partition_size = records_to_consume * recordsize;
     }
-
+    uint32_t block_size = records_to_consume*recordsize;
     uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES / _NWAY, recordsize);
     ifstream inputFile(SSD_FILE_NAME);
     fstream dramFile(DRAM_FILE_NAME, ios::in | ios::out);
@@ -44,15 +43,18 @@ int DRAM::read(int partition)
     /* Loading into ram in the 1MB chunks due to os limitations
     can be done in larger chunks if os supports */
     const int load_size = 1 << 20;
-    char readBuffer[load_size];
-    while (max_partition_size > 0 && !inputFile.eof())
+    char *readBuffer= new char[load_size];
+    while (block_size > 0 && !inputFile.eof())
     {
-        int read_block = max_partition_size > load_size ? load_size : max_partition_size;
+        int read_block = block_size > load_size ? load_size : block_size;
         inputFile.read(readBuffer, read_block);
         // cout<<"dram read "<<readBuffer<<endl;
         dramFile.write(readBuffer, read_block);
-        max_partition_size -= read_block;
+        block_size -= read_block;
     }
+    delete[] readBuffer;
+    dramFile.close();
+    inputFile.close();
     readOffsets[partition] = inputFile.tellg();
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
     return 1;
@@ -80,6 +82,7 @@ DRAM::DRAM()
 DRAM::DRAM(int NWAY) : _NWAY(NWAY)
 {
     readOffsets = new streamoff[NWAY];
+    records_in_partition = new uint32_t[NWAY];
     // initializing offsets for ssd
     streamoff partition_size = RoundDown(DRAM_SIZE_IN_BYTES, recordsize);
     uint32_t max_records = partition_size / recordsize;
@@ -97,6 +100,7 @@ DRAM::DRAM(int NWAY) : _NWAY(NWAY)
             ifstream inputFile(SSD_FILE_NAME, ios::binary | ios::ate);
             streamoff ssd_size = inputFile.tellg();
             records_in_partition[i] = (ssd_size - readOffsets[i]) / recordsize;
+            inputFile.close();
         }
     }
     // DRAM();
@@ -128,6 +132,7 @@ void DRAM::loadFromHDD(uint recordsToConsume)
     }
 
     hddSortOffset = HDDFile.tellg();
+    cout<<"Dram Hdd offset is "<<hddSortOffset<<endl;
     HDDFile.close();
     DRAMFile.close();
 }

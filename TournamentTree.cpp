@@ -1,5 +1,6 @@
-#include <bits/stdc++.h>
+// #include <bits/stdc++.h>
 #include <queue>
+#include <vector>
 #include <unistd.h>
 #include "Sort.h"
 #include "RecordStructure.h"
@@ -288,7 +289,7 @@ FILE *openFile(char *fileName, char *mode)
     return fp;
 }
 
-void TournamentTree::readNextValueFromRunUtil(vector<queue<RecordStructure>> in, int k, int run_id)
+void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > in, int k, int run_id)
 {
     if (in[run_id].empty() == false)
     {
@@ -320,7 +321,7 @@ void TournamentTree::readNextValueFromRunUtil(vector<queue<RecordStructure>> in,
     }
 }
 
-void TournamentTree::readNextValueFromRun(vector<queue<RecordStructure>> in, int k, int run_id)
+void TournamentTree::readNextValueFromRun(vector<queue<RecordStructure> > in, int k, int run_id)
 {
     // Note the runId needs to be set explicitly here
     tournamentTree[k + run_id].offsetValueCode = -1;
@@ -424,9 +425,9 @@ void writeSortedRecordToFile(RecordStructure rs)
             Truncate DRAM_OUT data
         Append this new record to DRAM_OUT
     */
-    if (isFileFull("out/DRAM_OUT.txt", 8 * 1024))
+    if (isFileFull("out/DRAM_OUT.txt", RoundDown(8 * 1024, recordsize)))
     {
-        if (isFileFull("out/SSD_OUT.txt", 1024 * 1024))
+        if (isFileFull("out/SSD_OUT.txt", RoundDown(1024 * 1024, recordsize)))
         {
             appendDataToDestination("out/SSD_OUT.txt", "out/HDD_OUT.txt");
             truncateFile("out/SSD_OUT.txt");
@@ -439,7 +440,7 @@ void writeSortedRecordToFile(RecordStructure rs)
     fclose(file);
 }
 
-void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure>> in, int k)
+void TournamentTree::performTreeOfLosersSort(vector< queue<RecordStructure> > in, int k)
 {
     // TournamentTreeNode *tournamentTree = getTree();
     while (tournamentTree[0].element.members[0] != 99999999) // TODO: Handle the late fence case
@@ -459,9 +460,9 @@ void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure>> in, 
     }
 }
 
-void mergeFiles(DRAM d, Cache c, vector<queue<RecordStructure>> cache_array, int k)
+void mergeFiles(DRAM d, Cache c, vector< queue<RecordStructure> > cache_array, int k)
 {
-
+    TRACE(true);
     // Create a tournament tree with k nodes. Every leaf node
     // has first element of a run
 
@@ -494,13 +495,13 @@ void externalSort(DRAM d, Cache c, int num_ways)
 {
     // Convert the cache.txt file to array and pass to below function
     TRACE(true);
-    vector<queue<RecordStructure>> cache_array;
+    vector<queue<RecordStructure> > cache_array;
     for (int i = 0; i < num_ways; i++)
     {
         // cache_array.push_back(queue<RecordStructure>());
-        cache_array[i] = c.loadDataForRun(i);
+        cache_array.push_back(c.loadDataForRun(i));
     }
-
+    cout<<"generated runs "<<endl;
     /*
         cache_array[i] = vector<RecordStructure> -> stores records of the ith partition
         cache_array[i][j] -> stores an individual record
