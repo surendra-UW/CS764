@@ -28,6 +28,10 @@ MSG=no message
 Test.exe : Makefile $(OBJS)
 	g++ $(CPPFLAGS) -o Test.exe $(OBJS)
 
+# target for Scan.cpp
+Scan.exe: Makefile Scan.o
+	g++ $(CPPFLAGS) -o Scan.exe Scan.o
+
 trace : Test.exe Makefile
 	@date > trace
 	./Test.exe >> trace
@@ -59,3 +63,6 @@ clean :
 
 run: Test.exe
 	./Test.exe
+
+run_scan: Scan.exe
+	./Scan.exe

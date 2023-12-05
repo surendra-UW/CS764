@@ -10,12 +10,12 @@
 
 // Hash function for RecordStructure
 size_t hash_function(const RecordStructure& record) {
-        return record.member1;
+        return record.members[0];
 }
 
 bool verifySortOrder(const std::vector<RecordStructure>& records) {
     for (size_t i = 1; i < records.size(); ++i) {
-        if (records[i].member1 < records[i - 1].member1) {
+        if (records[i].members[0] < records[i - 1].members[0]) {
             return false; // Sort order violation
         }
     }
@@ -32,7 +32,7 @@ void processFileInChunks(const std::string& filename, size_t chunkSize) {
         RecordStructure record;
         char comma;
 
-        if (!(iss >> record.member1 >> comma >> record.member2 >> comma >> record.member3 >> comma >> record.member4)) {
+        if (!(iss >> record.members[0] >> comma >> record.members[1] >> comma >> record.members[2] >> comma >> record.members[3])) {
             std::cerr << "Error parsing line in input file.\n";
             return;
         }
@@ -71,7 +71,7 @@ std::bitset<1000000> createBitmap(const std::string& filename) {
     while (std::getline(file, line)) {
         std::istringstream iss(line);
         char comma;
-        if ((iss >> record.member1 >> comma >> record.member2 >> comma >> record.member3 >> comma >> record.member4)) {
+        if ((iss >> record.members[0] >> comma >> record.members[1] >> comma >> record.members[2] >> comma >> record.members[3])) {
              size_t hashValue = hash_function(record);
              bitmap.set(hashValue % 1000000, true); 
         }

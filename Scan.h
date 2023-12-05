@@ -1,3 +1,9 @@
+#include <iostream>
+#include <random>
+#include <vector>
+#include <climits>
+#include <algorithm>
+#include <functional>
 #include "Iterator.h"
 
 class ScanPlan : public Plan
@@ -17,6 +23,7 @@ public:
 	ScanIterator (ScanPlan const * const plan);
 	~ScanIterator ();
 	bool next ();
+	//std::string generateRandomString(size_t length, random_bytes_engine& rbe);
 private:
 	ScanPlan const * const _plan;
 	RowCount _count;

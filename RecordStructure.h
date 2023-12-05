@@ -3,5 +3,5 @@
 
 struct RecordStructure
 {
-    uint64_t members[FIELD_COUNT];
+    std::string members[FIELD_COUNT];
 };

@@ -73,10 +73,10 @@ void write_ramfile(char *inputfile, std::vector<RecordStructure> &arr)
     {
         const RecordStructure &record = arr[i];
         fprintf(output_file, "%llu,%llu,%llu,%llu\n",
-                static_cast<unsigned long long>(record.members[0]),
-                static_cast<unsigned long long>(record.members[1]),
-                static_cast<unsigned long long>(record.members[2]),
-                static_cast<unsigned long long>(record.members[3]));
+                static_cast<std::string>(record.members[0]),
+                static_cast<std::string>(record.members[1]),
+                static_cast<std::string>(record.members[2]),
+                static_cast<std::string>(record.members[3]));
     }
     fclose(output_file);
 
@@ -107,7 +107,7 @@ void qSort(std::vector<RecordStructure> &arr, int left, int right, bool (*compar
 int partition(std::vector<RecordStructure> &arr, int left, int right, bool (*comparator)(const RecordStructure &, const RecordStructure &))
 {
 
-    int pivot = arr[right].members[0];
+    std::string pivot = arr[right].members[0];
     int i = left - 1;
 
     for (int j = left; j < right; j++)
