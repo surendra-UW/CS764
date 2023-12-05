@@ -67,7 +67,7 @@ void write_ramfile(char *inputfile, std::vector<RecordStructure> &arr)
         std::cerr << "Error opening output file!" << std::endl;
     }
 
-    cout << arr.size() << endl;
+    cout << "aray size after internal sorting "<<arr.size() << endl;
     // Write the sorted data back to the file
     for (size_t i = 0; i < arr.size(); ++i)
     {

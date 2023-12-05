@@ -1,13 +1,14 @@
 #pragma once
 #include "Memory.h"
+#include "RecordStructure.h"
+#include "defs.h"
 
 using namespace std;
 
 class Cache : public Memory
 {
 public:
-    int rounded_cache_block;
-    int read(int partition, uint64_t block_size) override;
+    int read(int partition) override;
     void write() override;
     // void clearRam();
     Cache(int NWAY);
@@ -16,6 +17,7 @@ public:
     streamoff getReadOffset(int partition);
     void setReadOffset(int partition, streamoff offset);
     queue<RecordStructure> loadDataForRun(int runId);
+    int *getCachePartitionOffsets(int runId);
 
 private:
     int _NWAY;
