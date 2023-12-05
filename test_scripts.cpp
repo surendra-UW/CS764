@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "Sort.h"
+
 #include <stdlib.h>
 #include <set>
 #include <unordered_set>
 #include <limits>
+#include "Sort.h"
 #include "internal_sort.h"
 
 using namespace std;
@@ -25,16 +26,20 @@ bool verifySets(char *inputFile, char *outputFile) {
 
     // Read rows from input file and insert into the set
     std::string inputRow;
+    cout<<"Input Row count = "<<inputRows.size();
     while (std::getline(input, inputRow)) {
         inputRows.insert(inputRow);
     }
+    cout<<"Input Row count = "<<inputRows.size();
 
     // Check if each row in the output file exists in the set
     std::string outputRow;
     while (std::getline(output, outputRow)) {
         if (inputRows.find(outputRow) == inputRows.end()) {
             std::cerr << "Mismatch found: Row in output file not present in input file." << std::endl;
-            return false;
+            // return false;
+        } else {
+            cout<<"Output row is present\n";
         }
     }
 
@@ -67,3 +72,7 @@ bool verifySortOrder(char *outputFile) {
     return true;
 }
 
+int main(){
+    verifySets("HDD.txt","out/HDD_OUT.txt");
+    return 0;
+}

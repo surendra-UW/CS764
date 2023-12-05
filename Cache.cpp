@@ -70,8 +70,11 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
     // Clean up
     inputFile.close();
     cout<<"records pushed is "<<records_in_run.size()<<endl;
-    RecordStructure r = records_in_run.front();
-    cout<<"records columns "<<r.members[0]<<" "<<r.members[1]<<" "<<r.members[2]<<" "<<r.members[3]<<endl;
+    if(!records_in_run.empty()){
+        RecordStructure r = records_in_run.front();
+        cout<<"records columns "<<r.members[0]<<" "<<r.members[1]<<" "<<r.members[2]<<" "<<r.members[3]<<endl;
+    }
+
     return records_in_run;
 }
 

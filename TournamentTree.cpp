@@ -57,7 +57,7 @@ void TournamentTree::computeOffsetForLoser(int loserIndex, int winnerIndex)
     tournamentTree[loserIndex].offsetValueCode = (FIELD_LENGTH - tournamentTree[loserIndex].offset) * DOMAIN_OF_VALUES + tournamentTree[loserIndex].element.members[tournamentTree[loserIndex].offset];
     // TODO: members[0]
 
-    printf("\ncomputeOffsetForLoser:: OVC(%d) = %d, OVC(%d) = %d", tournamentTree[loserIndex].offsetValueCode, loserIndex, tournamentTree[winnerIndex].offsetValueCode, winnerIndex);
+    printf("\ncomputeOffsetForLoser:: OVC(%llu) = %llu, OVC(%llu) = %llu", loserIndex, tournamentTree[loserIndex].offsetValueCode, winnerIndex,  tournamentTree[winnerIndex].offsetValueCode);
 }
 
 void TournamentTree::computeOffsetForLoser(TournamentTreeNode loser, TournamentTreeNode winner)
@@ -66,7 +66,7 @@ void TournamentTree::computeOffsetForLoser(TournamentTreeNode loser, TournamentT
 
     loser.offsetValueCode = (FIELD_LENGTH - loser.offset) * DOMAIN_OF_VALUES + loser.element.members[loser.offset];
     // TODO: members[0]
-    printf("\ncomputeOffsetForLoser:: OVC(%d) = %d, OVC(%d) = %d", loser.offsetValueCode, winner.offsetValueCode);
+    // printf("\ncomputeOffsetForLoser:: OVC(%d) = %d, OVC(%d) = %d", loser.offsetValueCode, winner.offsetValueCode);
 }
 
 void TournamentTree::computeOffsetValueCode(int node_index)
@@ -136,7 +136,7 @@ bool TournamentTree::isLeftLesserThanRight(TournamentTreeNode left, TournamentTr
 {
     // check if nodes have the offsets computed
     // case 1: Yes
-    printf("\nisLeftLesserThanRight:: OVC(left) = %d, OVC(right) = %d", left.offsetValueCode, right.offsetValueCode);
+    printf("\nisLeftLesserThanRight:: OVC(left) = %llu, OVC(right) = %llu", left.offsetValueCode, right.offsetValueCode);
 
     if (left.offsetValueCode != -1 && right.offsetValueCode != -1)
     {
@@ -306,11 +306,13 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
         // check the DRAM offsets if data needs to be loaded from SSD
         if (c.read(run_id) == -1)
         {
+            cout<<" Read data log 1\n";
             // Data read from DRAM is not successful
             // no records in DRAM
             int records_loaded_into_dram = d.read(run_id);
             if (records_loaded_into_dram == -1)
             {
+                cout<<" Read data log 2\n";
                 // Partition - run_id in SSD is sorted!
                 // TODO: SSD Logic - For final merge step
                 // All the data in this run has been read.
@@ -319,11 +321,20 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
                 in[run_id].push(lateFence);
                 return;
             }
+                cout<<" Read data log 3\n";
             c.setRecordsInPartition(run_id, records_loaded_into_dram);
             c.read(run_id); // refilling the cache from DRAM since it failed earlier
         }
         in[run_id] = c.loadDataForRun(run_id);
         cout<<"loading new batch for run "<<run_id<<" queue size "<<in[run_id].size()<<endl;
+        cout<<" Read data log 4\n";
+
+        if(in[run_id].size() == 0){
+            RecordStructure lateFence = {(uint64_t)999999999999, 999999999, 999999999};
+            in[run_id].push(lateFence);
+            cout<<"Pushed late fence for run "<<run_id<<endl;
+        }
+
     }
 }
 
@@ -373,7 +384,7 @@ bool isFileFull(string filePath, long sizeToCheck)
         }
         else
         {
-            cout << "Size = " << size << endl;
+            // cout << "Size = " << size << endl;
 
             printf("size is not 8KB.\n");
         }
@@ -418,10 +429,11 @@ void writeSortedRecordToFile(RecordStructure rs)
     }
     FILE *file = fopen("out/DRAM_OUT.txt", "a");
     fprintf(file, "%llu,%llu,%llu,%llu\n", rs.members[0], rs.members[1], rs.members[2], rs.members[3]);
+cout<<"Value written to DRAM is "<<rs.members[0]<< endl;
     fclose(file);
 }
 
-void TournamentTree::performTreeOfLosersSort(vector< queue<RecordStructure> > in, int k)
+void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure>> &in, int k)
 {
     // TournamentTreeNode *tournamentTree = getTree();
     while (tournamentTree[0].element.members[0] != (uint64_t)999999999999) // TODO: Handle the late fence case
@@ -441,7 +453,7 @@ void TournamentTree::performTreeOfLosersSort(vector< queue<RecordStructure> > in
     }
 }
 
-void mergeFiles(DRAM d, Cache c, vector< queue<RecordStructure> > cache_array, int k)
+void mergeFiles(DRAM d, Cache c, vector<queue<RecordStructure> > &cache_array, int k)
 {
     TRACE(true);
     // Create a tournament tree with k nodes. Every leaf node
