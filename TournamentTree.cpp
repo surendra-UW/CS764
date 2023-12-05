@@ -291,13 +291,14 @@ FILE *openFile(char *fileName, char *mode)
     return fp;
 }
 
-void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > in, int k, int run_id)
+void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &in, int k, int run_id)
 {
-    if (in[run_id].empty() == false)
+    if (!in[run_id].empty())
     {
         tournamentTree[k + run_id].element = in[run_id].front();
         tournamentTree[k + run_id].runId = run_id;
         in[run_id].pop();
+        cout<<"queue size of partitoitn: "<< run_id<<" :"<<in[run_id].size()<<endl;
     }
     else
     {
@@ -307,23 +308,26 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > i
         {
             // Data read from DRAM is not successful
             // no records in DRAM
-            if (d.read(run_id) == -1)
+            int records_loaded_into_dram = d.read(run_id);
+            if (records_loaded_into_dram == -1)
             {
                 // Partition - run_id in SSD is sorted!
                 // TODO: SSD Logic - For final merge step
                 // All the data in this run has been read.
                 // Pass late fence - NULL vector/ empty vector for termination of the run
-                RecordStructure lateFence = {(uint64_t)999999999999, 99999999, 99999999};
+                RecordStructure lateFence = {(uint64_t)999999999999, 999999999, 999999999};
                 in[run_id].push(lateFence);
                 return;
             }
+            c.setRecordsInPartition(run_id, records_loaded_into_dram);
             c.read(run_id); // refilling the cache from DRAM since it failed earlier
         }
         in[run_id] = c.loadDataForRun(run_id);
+        cout<<"loading new batch for run "<<run_id<<" queue size "<<in[run_id].size()<<endl;
     }
 }
 
-void TournamentTree::readNextValueFromRun(vector<queue<RecordStructure> > in, int k, int run_id)
+void TournamentTree::readNextValueFromRun(vector<queue<RecordStructure> > &in, int k, int run_id)
 {
     // Note the runId needs to be set explicitly here
     tournamentTree[k + run_id].offsetValueCode = -1;
@@ -420,7 +424,7 @@ void writeSortedRecordToFile(RecordStructure rs)
 void TournamentTree::performTreeOfLosersSort(vector< queue<RecordStructure> > in, int k)
 {
     // TournamentTreeNode *tournamentTree = getTree();
-    while (tournamentTree[0].element.members[0] != 99999999) // TODO: Handle the late fence case
+    while (tournamentTree[0].element.members[0] != (uint64_t)999999999999) // TODO: Handle the late fence case
     {
         printf("Value written to output file\t=\t%llu\n", tournamentTree[0].element.members[0]);
         writeSortedRecordToFile(tournamentTree[0].element);

@@ -80,8 +80,9 @@ int Cache::read(int partition)
     TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
 
-    cout<<"records to consume "<<records_to_consume<<endl;
+    cout<<"max records to consume "<<records_to_consume<<endl;
     cout<<"records left to consume  "<<records_in_partition[partition]<<endl;
+
     // check the records count left in SSD in this partition
     if (records_in_partition[partition] == 0)
         return -1; // indicating end of partition
@@ -127,7 +128,7 @@ int Cache::read(int partition)
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
     inputFile.close();
     cacheFile.close();
-    return 0;
+    return records_to_consume;
 }
 
 void Cache::write()
@@ -178,4 +179,10 @@ streamoff Cache::getReadOffset(int partition)
 void Cache::setReadOffset(int partition, streamoff offset)
 {
     readOffsets[partition] = offset;
+}
+
+
+void Cache::setRecordsInPartition(int partition, uint32_t records_count)
+{
+    this->records_in_partition[partition] = records_count;
 }

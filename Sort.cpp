@@ -40,7 +40,7 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	// TODO: hard coding and commenting records generation
 	// while (_input->next())
 	// 	++_consumed;
-	_consumed = 3616612;
+	_consumed = 13258810;
 	delete _input;
 
 	ifstream inputFile("HDD.txt", ios::binary | ios::ate);
@@ -50,9 +50,10 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 		exit(1);
 	}
 	streampos curr = inputFile.tellg();
-	_recsize = curr / _consumed;
+	_recsize = curr/_consumed;
 	inputFile.close();
 	recordsize = _recsize;
+	cout<<"record size: "<<recordsize<<endl;
 	// initialize
 	batches = 0;
 	internalSort();
@@ -167,58 +168,3 @@ int SortIterator::externalMerge()
 	}
 	externalSort(dram_merge, cache_merge, batches);
 }
-
-// uint SortIterator::blockLeftToMerge(Cache cache, DRAM dram, int partition) {
-// 	streamoff offset = cache.getReadOffset(partition);
-
-// }
-/*
-
-void SortIterator::initRamMem(uint blockSize, int step) {
-	for(int i=0;i<NWAY_MERGE;i++){
-		loadRamBlocks(i, 0, 0, blockSize, step);
-	}
-}
-
-bool SortIterator::loadRamBlocks(int partition, int ramOffset, int hddOffset, uint blockSize, int step)
-{
-	std::cout << "Hello, World!" << std::endl;
-	//if hddOffset reaches limit return false
-	fstream ram("DRAM.txt", ios::in|ios::out);
-	ifstream inputFile("HDD2.txt");
-	if(!ram.is_open() || !inputFile.is_open()) {
-		cout<<"failed to load data from Hdd"<<endl;
-		TRACE(true);
-		exit(1);
-	}
-	//size of each buffer in bytes in ram
-	streamoff ramPartitionSizeInBytes = RoundDown(DRAM_SIZE_IN_BYTES / (NWAY_MERGE + 1), _recsize);
-	//size of each buffer in hdd for first run
-	streamoff hddPartitionSizeInBytes = RoundDown(DRAM_SIZE_IN_BYTES, _recsize)*step*NWAY_MERGE;
-	if (partition > 0 || ramOffset > 0)
-	{
-		ram.seekp(partition * ramPartitionSizeInBytes + ramOffset, ios::beg);
-	}
-	if (partition > 0 || hddOffset > 0)
-	{
-		streamoff hddPos = hddPartitionSizeInBytes + partition*RoundDown(DRAM_SIZE_IN_BYTES, _recsize);
-		inputFile.seekg(hddPos + hddOffset, ios::beg);
-	}
-
-	blockSize = RoundDown(blockSize, _recsize);
-	int read_size = RoundDown(HDD_PAGE_SIZE, _recsize);
-	while (blockSize > 0)
-	{
-		int read_block = blockSize >= read_size ? read_size : blockSize;
-		//1 char for the end delimiter for a char array i.e, NULL
-		char data[read_block+1];
-		inputFile.read(data, read_block);
-		ram.write(data, read_block);
-		blockSize = blockSize - read_block;
-	}
-
-	ram.close();
-	inputFile.close();
-	return true;
-}
-*/

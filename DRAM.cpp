@@ -21,7 +21,7 @@ int DRAM::read(int partition)
 {
     TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
-
+    cout<<"loading into dram: "<<partition<<endl;
     // check the records count left in SSD in this partition
     if (records_in_partition[partition] == 0)
         return -1; // indicating end of partition
@@ -32,6 +32,7 @@ int DRAM::read(int partition)
         records_to_consume = records_in_partition[partition];
     }
     uint32_t block_size = records_to_consume*recordsize;
+    cout<<"dram block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
     uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES / _NWAY, recordsize);
     ifstream inputFile(SSD_FILE_NAME);
     fstream dramFile(DRAM_FILE_NAME, ios::in | ios::out);
@@ -57,7 +58,7 @@ int DRAM::read(int partition)
     inputFile.close();
     readOffsets[partition] = inputFile.tellg();
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
-    return 1;
+    return records_to_consume;
 }
 
 void DRAM::write()
