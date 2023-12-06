@@ -8,7 +8,7 @@ using namespace std;
 
 FILE *openFile(char *fileName, char *mode);
 
-void mergeFiles(DRAM d, Cache c, vector<queue<RecordStructure>> in, int k);
+void mergeFiles(DRAM d, Cache c, vector<queue<RecordStructure> > &in, int k);
 
 void externalSort(DRAM d, Cache c, int num_ways);
 class TournamentTree

@@ -1,7 +1,7 @@
 
 #include "defs.h"
 #include "Sort.h"
-
+#include "unistd.h"
 #include "constants.h"
 // #include "Cache.h"
 
@@ -43,15 +43,15 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	_consumed = 13258810;
 	delete _input;
 
-	ifstream inputFile("HDD.txt", ios::binary | ios::ate);
-	if (!inputFile)
-	{
-		cout << "cannot open the hard disk" << endl;
-		exit(1);
-	}
-	streampos curr = inputFile.tellg();
-	_recsize = curr/_consumed;
-	inputFile.close();
+	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
+	// if (!inputFile)
+	// {
+	// 	cout << "cannot open the hard disk" << endl;
+	// 	exit(1);
+	// }
+	// streampos curr = inputFile.tellg();
+	// _recsize = curr/_consumed;
+	// inputFile.close();
 	recordsize = _recsize;
 	cout<<"record size: "<<recordsize<<endl;
 	// initialize
@@ -166,5 +166,6 @@ int SortIterator::externalMerge()
 	{
 		cache_merge.read(i);
 	}
+
 	externalSort(dram_merge, cache_merge, batches);
 }
