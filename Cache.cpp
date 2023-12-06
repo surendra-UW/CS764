@@ -35,7 +35,7 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
     // Move the file pointer to the starting offset
     inputFile.seekg(startOffset, ios::beg);
     // Calculate the number of bytes to read
-    int bytesToRead = endOffset - startOffset;
+    const int bytesToRead = endOffset - startOffset;
     // Allocate memory to store the read data
     char buffer[bytesToRead+1];
     // Read the specified range of bytes from the file
@@ -71,7 +71,6 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
     inputFile.close();
     cout<<"records pushed is "<<records_in_run.size()<<endl;
     RecordStructure r = records_in_run.front();
-    cout<<"records columns "<<r.members[0]<<" "<<r.members[1]<<" "<<r.members[2]<<" "<<r.members[3]<<endl;
     return records_in_run;
 }
 
@@ -80,8 +79,9 @@ int Cache::read(int partition)
     TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
 
-    cout<<"records to consume "<<records_to_consume<<endl;
+    cout<<"max records to consume "<<records_to_consume<<endl;
     cout<<"records left to consume  "<<records_in_partition[partition]<<endl;
+
     // check the records count left in SSD in this partition
     if (records_in_partition[partition] == 0)
         return -1; // indicating end of partition
@@ -103,7 +103,7 @@ int Cache::read(int partition)
 
     cache_partition_offsets[partition][0] = partition_size * partition;
     cache_partition_offsets[partition][1] = partition_size * partition + block_size;
-
+    cout<<"seek offsets: cahce "<<partition_size * partition << " ram offset "<<readOffsets[partition]<<endl;
     cout<<"block size " << block_size<<endl;
     ifstream inputFile(DRAM_FILE_NAME);
     fstream cacheFile(CACHE_FILE_NAME, ios::in | ios::out);
@@ -119,15 +119,17 @@ int Cache::read(int partition)
     {
         int read_block = block_size > load_size ? load_size : block_size;
         inputFile.read(readBuffer, read_block);
+        // cout<<"cache read data: "<<readBuffer<<"length is "<<sizeof(readBuffer)<<endl;;
         cacheFile.write(readBuffer, read_block);
         block_size -= read_block;
     }
     delete[] readBuffer;
     readOffsets[partition] = inputFile.tellg();
+    cout<<"dram end point is "<<readOffsets[partition]<<endl;
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
     inputFile.close();
     cacheFile.close();
-    return 0;
+    return records_to_consume;
 }
 
 void Cache::write()
@@ -178,4 +180,14 @@ streamoff Cache::getReadOffset(int partition)
 void Cache::setReadOffset(int partition, streamoff offset)
 {
     readOffsets[partition] = offset;
+}
+
+
+void Cache::setRecordsInPartition(int partition, uint32_t records_count)
+{
+    this->records_in_partition[partition] = records_count;
+}
+
+void Cache:: resetReadOffset(int partition) {
+    this->readOffsets[partition] = RoundDown(DRAM_SIZE_IN_BYTES / _NWAY, recordsize)*partition;
 }
