@@ -56,7 +56,7 @@ std::vector<RecordStructure> read_ramfile(char *inputfile)
         // ss >> record.members[1] >> delimiter;
         // ss >> record.members[2] >> delimiter;
         // ss >> record.members[3];
-        cout<<"Internal sort:: Record member[0].length = "<<record.members[0].length()<<endl;
+        // cout<<"Internal sort:: Record member[0].length = "<<record.members[0].length()<<endl;
         arr.push_back(record);
     }
     input_file.close();

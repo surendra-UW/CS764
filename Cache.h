@@ -19,6 +19,7 @@ public:
     queue<RecordStructure> loadDataForRun(int runId);
     int *getCachePartitionOffsets(int runId);
     void setRecordsInPartition(int partition, uint32_t records_count);
+    void resetReadOffset(int partition);
 
 private:
     int _NWAY;

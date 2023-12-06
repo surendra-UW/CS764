@@ -32,8 +32,9 @@ int DRAM::read(int partition)
         records_to_consume = records_in_partition[partition];
     }
     uint32_t block_size = records_to_consume*recordsize;
-    cout<<"dram block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
     uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES / _NWAY, recordsize);
+    cout<<"dram block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
+    cout<<"seek offsets: dram "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
     ifstream inputFile(SSD_FILE_NAME);
     fstream dramFile(DRAM_FILE_NAME, ios::in | ios::out);
     fileOpenCheck(inputFile, SSD_FILE_NAME);
@@ -54,10 +55,12 @@ int DRAM::read(int partition)
         block_size -= read_block;
     }
     delete[] readBuffer;
+
+    readOffsets[partition] = inputFile.tellg();
+    cout<<"ssd end point is "<<readOffsets[partition]<<endl;
+    records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
     dramFile.close();
     inputFile.close();
-    readOffsets[partition] = inputFile.tellg();
-    records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
     return records_to_consume;
 }
 

@@ -35,7 +35,7 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
     // Move the file pointer to the starting offset
     inputFile.seekg(startOffset, ios::beg);
     // Calculate the number of bytes to read
-    int bytesToRead = endOffset - startOffset;
+    const int bytesToRead = endOffset - startOffset;
     // Allocate memory to store the read data
     char buffer[bytesToRead+1];
     // Read the specified range of bytes from the file
@@ -72,7 +72,7 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
     cout<<"records pushed is "<<records_in_run.size()<<endl;
     if(!records_in_run.empty()){
         RecordStructure r = records_in_run.front();
-        cout<<"records columns "<<r.members[0]<<" "<<r.members[1]<<" "<<r.members[2]<<" "<<r.members[3]<<endl;
+        // cout<<"records columns "<<r.members[0]<<" "<<r.members[1]<<" "<<r.members[2]<<" "<<r.members[3]<<endl;
     }
 
     return records_in_run;
@@ -107,7 +107,7 @@ int Cache::read(int partition)
 
     cache_partition_offsets[partition][0] = partition_size * partition;
     cache_partition_offsets[partition][1] = partition_size * partition + block_size;
-
+    cout<<"seek offsets: cahce "<<partition_size * partition << " ram offset "<<readOffsets[partition]<<endl;
     cout<<"block size " << block_size<<endl;
     ifstream inputFile(DRAM_FILE_NAME);
     fstream cacheFile(CACHE_FILE_NAME, ios::in | ios::out);
@@ -128,6 +128,7 @@ int Cache::read(int partition)
     }
     delete[] readBuffer;
     readOffsets[partition] = inputFile.tellg();
+    cout<<"dram end point is "<<readOffsets[partition]<<endl;
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
     inputFile.close();
     cacheFile.close();
@@ -188,4 +189,8 @@ void Cache::setReadOffset(int partition, streamoff offset)
 void Cache::setRecordsInPartition(int partition, uint32_t records_count)
 {
     this->records_in_partition[partition] = records_count;
+}
+
+void Cache:: resetReadOffset(int partition) {
+    this->readOffsets[partition] = RoundDown(DRAM_SIZE_IN_BYTES / _NWAY, recordsize)*partition;
 }
