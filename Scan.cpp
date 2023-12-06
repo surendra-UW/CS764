@@ -1,12 +1,17 @@
 #include <iostream>
 #include <random>
+#include <fstream>
+#include <vector>
+#include <climits>
+#include <algorithm>
+#include <functional>
+#include <string>
 #include "Scan.h"
 #include "RecordStructure.h"
-// #include <string>
+#include "defs.h"
 
-#define RANDMIN 100000000000
-#define RANDMAX 999999999999
 using namespace std;
+// using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char>;
 
 ScanPlan::ScanPlan(RowCount const count) : _count(count)
 {
@@ -38,39 +43,60 @@ ScanIterator::~ScanIterator()
 } // ScanIterator::~ScanIterator
 
 bool ScanIterator::next()
+// int main()
 {
 	TRACE(true);
 
 	if (_count >= _plan->_count)
 		return false;
 
-	RecordStructure rs;
-	// Create a random number generator engine and seed it
+	// const int numRecords = 10;
+	// const int rec_size = 1000;
+	//  Create a random number generator engine and seed it
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
-	// Define distributions for random values within specific ranges
-	uniform_int_distribution<unsigned long long> distribution(RANDMIN, RANDMAX); // Adjust range as needed
+	// Define distribution for random values within the character set "0123456789"
+	std::uniform_int_distribution<unsigned short> charDistribution(0, 9);
 
-	// Generate random values for the structure members
-	rs.members[0] = distribution(gen);
-	rs.members[1] = distribution(gen);
-	rs.members[2] = distribution(gen);
-	rs.members[3] = distribution(gen);
-
-	FILE *outputFile = std::fopen("HDD.txt", "a");
-	if (!outputFile)
+	// Generate random values for the structure members for each record
+	for (int k = 0; k < cvalue; ++k)
 	{
-		printf("Error opening file for appending.");
-		// << std::endl;
-		return 1;
+		RecordStructure rs;
+
+		// strict 3 columns
+		int columnLength = svalue / 3;
+
+		// Populate the first three columns with strings of equal length
+		for (int i = 0; i < 3; ++i)
+		{
+			for (int j = 0; j < columnLength; ++j)
+			{
+				rs.members[i] += static_cast<char>('0' + charDistribution(gen));
+			}
+		}
+
+		// Any extra bytes spill over to the fourth column
+		for (int j = 0; j < svalue % 3; ++j)
+		{
+			rs.members[3] += static_cast<char>('0' + charDistribution(gen));
+		}
+
+		// Write the generated strings to a file
+		std::ofstream outputFile("HDD.txt", std::ios::app);
+		if (!outputFile)
+		{
+			std::cerr << "Error opening file for appending." << std::endl;
+			return 1;
+		}
+
+		outputFile << rs.members[0] << "," << rs.members[1] << "," << rs.members[2] << "," << rs.members[3] << "\n";
+
+		outputFile.close();
 	}
-
-	fprintf(outputFile, "%llu,%llu,%llu,%llu\n", rs.members[0], rs.members[1], rs.members[2], rs.members[3]);
-
-	std::fclose(outputFile);
 
 	printf("Struct %d appended to file.", _count);
 	++_count;
 	return true;
 } // ScanIterator::next
+
