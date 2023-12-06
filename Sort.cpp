@@ -38,9 +38,9 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	TRACE(true);
 
 	// TODO: hard coding and commenting records generation
-	// while (_input->next())
-	// 	++_consumed;
-	_consumed = 10000;//13258810;
+	while (_input->next())
+		++_consumed;
+	// _consumed = 10000;//13258810;
 	delete _input;
 
 	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
