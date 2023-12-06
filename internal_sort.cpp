@@ -37,7 +37,7 @@ std::vector<RecordStructure> read_ramfile(char *inputfile)
 
     // Read data from the file and store it in a vector of RecordStructure
     std::vector<RecordStructure> arr;
-    std::string line;
+    std::string line, column;
 
     while (std::getline(input_file, line))
     {
@@ -46,12 +46,17 @@ std::vector<RecordStructure> read_ramfile(char *inputfile)
         std::string token;
         RecordStructure record;
 
-        char delimiter;
-        ss >> record.members[0] >> delimiter;
-        ss >> record.members[1] >> delimiter;
-        ss >> record.members[2] >> delimiter;
-        ss >> record.members[3];
-
+        int j = 0;
+        while(std::getline(ss, column, ',')) {
+            record.members[j] = column;//stoull(column);
+            j++;
+        }
+        // char delimiter = ',';
+        // ss >> record.members[0] >> delimiter;
+        // ss >> record.members[1] >> delimiter;
+        // ss >> record.members[2] >> delimiter;
+        // ss >> record.members[3];
+        cout<<"Internal sort:: Record member[0].length = "<<record.members[0].length()<<endl;
         arr.push_back(record);
     }
     input_file.close();
@@ -72,11 +77,11 @@ void write_ramfile(char *inputfile, std::vector<RecordStructure> &arr)
     for (size_t i = 0; i < arr.size(); ++i)
     {
         const RecordStructure &record = arr[i];
-        fprintf(output_file, "%llu,%llu,%llu,%llu\n",
-                static_cast<unsigned long long>(record.members[0]),
-                static_cast<unsigned long long>(record.members[1]),
-                static_cast<unsigned long long>(record.members[2]),
-                static_cast<unsigned long long>(record.members[3]));
+        fprintf(output_file, "%s,%s,%s,%s\n",
+                static_cast<std::string>(record.members[0]).c_str(),
+                static_cast<std::string>(record.members[1]).c_str(),
+                static_cast<std::string>(record.members[2]).c_str(),
+                static_cast<std::string>(record.members[3]).c_str());
     }
     fclose(output_file);
 
@@ -107,7 +112,7 @@ void qSort(std::vector<RecordStructure> &arr, int left, int right, bool (*compar
 int partition(std::vector<RecordStructure> &arr, int left, int right, bool (*comparator)(const RecordStructure &, const RecordStructure &))
 {
 
-    int pivot = arr[right].members[0];
+    std::string pivot = arr[right].members[0];
     int i = left - 1;
 
     for (int j = left; j < right; j++)
