@@ -1,4 +1,3 @@
-// #include <bits/stdc++.h>
 #include <queue>
 #include <vector>
 #include <unistd.h>
@@ -12,7 +11,6 @@
 
 using namespace std;
 
-// int TournamentTree::left(int i) { return (2 * i); }
 TournamentTree::TournamentTree() {}
 
 TournamentTree::TournamentTree(TournamentTreeNode a[], int size, DRAM d, Cache c)
@@ -52,35 +50,47 @@ void TournamentTree::printTreeOfLosers()
 
 void TournamentTree::computeOffsetForLoser(int loserIndex, int winnerIndex)
 {
-    fullComparison(loserIndex, winnerIndex, tournamentTree[loserIndex].offset);
+    int offset = 0;
+    fullComparison(loserIndex, winnerIndex, offset);
 
-    tournamentTree[loserIndex].offsetValueCode = (FIELD_LENGTH - tournamentTree[loserIndex].offset) * DOMAIN_OF_VALUES + tournamentTree[loserIndex].element.members[0][tournamentTree[loserIndex].offset];
-    // TODO: members[0]
+    tournamentTree[loserIndex].offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
+    if(offset < FIELD_LENGTH){
+        tournamentTree[loserIndex].offsetValueCode += (int)tournamentTree[loserIndex].element.members[0][offset];
+    }
 
-    printf("\ncomputeOffsetForLoser:: OVC(%llu) = %llu, OVC(%llu) = %llu", loserIndex, tournamentTree[loserIndex].offsetValueCode, winnerIndex,  tournamentTree[winnerIndex].offsetValueCode);
+    printf("\ncomputeOffsetForLoser:: OVC(%d) = %d, OVC(%d) = %d", loserIndex, tournamentTree[loserIndex].offsetValueCode, winnerIndex,  tournamentTree[winnerIndex].offsetValueCode);
 }
 
-void TournamentTree::computeOffsetForLoser(TournamentTreeNode loser, TournamentTreeNode winner)
+void TournamentTree::computeOffsetForLoser(TournamentTreeNode &loser, TournamentTreeNode &winner)
 {
-    fullComparison(loser, winner, loser.offset);
+    int offset = 0;
+    fullComparison(loser, winner, offset);
 
-    loser.offsetValueCode = (FIELD_LENGTH - loser.offset) * DOMAIN_OF_VALUES + loser.element.members[0][loser.offset];
-    // TODO: members[0]
-    // printf("\ncomputeOffsetForLoser:: OVC(%d) = %d, OVC(%d) = %d", loser.offsetValueCode, winner.offsetValueCode);
+    loser.offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
+    if(offset < FIELD_LENGTH){
+        loser.offsetValueCode += (int)loser.element.members[0][offset];
+    }
+    TRACE(true);
+    printf("\ncomputeOffsetForLoserReference:: OVC(loser) = %d, OVC(winner) = %d", loser.offsetValueCode, winner.offsetValueCode);
 }
 
 void TournamentTree::computeOffsetValueCode(int node_index)
 {
-
-    while(tournamentTree[node_index].offset < tournamentTree[node_index].element.members[0].length()){
-        if(tournamentTree[node_index].element.members[0][tournamentTree[node_index].offset] != '0')
+    int offset = 0;
+    while(offset < FIELD_LENGTH){
+        if(tournamentTree[node_index].element.members[0][offset] != '0')
             break;
-        tournamentTree[node_index].offset++;
+        offset++;
     }
-    cout<<"Offset of node "<<node_index<<"\t = "<<tournamentTree[node_index].offset<<endl;
-    tournamentTree[node_index].offsetValueCode = (FIELD_LENGTH - tournamentTree[node_index].offset) * DOMAIN_OF_VALUES + (int)tournamentTree[node_index].element.members[0][tournamentTree[node_index].offset];
-    cout<<"Part 2 char value = "<<tournamentTree[node_index].element.members[0][tournamentTree[node_index].offset]<<endl;
-    cout<<"Part 2 int value = "<<(int)tournamentTree[node_index].element.members[0][tournamentTree[node_index].offset]<<endl;
+    cout<<"Offset of node "<<node_index<<"\t = "<<offset<<endl;
+
+    tournamentTree[node_index].offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
+    if(offset < FIELD_LENGTH) {
+        tournamentTree[node_index].offsetValueCode += (int)tournamentTree[node_index].element.members[0][offset];
+    }
+    
+    // cout<<"Part 2 char value = "<<tournamentTree[node_index].element.members[0][tournamentTree[node_index].offset]<<endl;
+    // cout<<"Part 2 int value = "<<(int)tournamentTree[node_index].element.members[0][tournamentTree[node_index].offset]<<endl;
     
     cout<<"Offset Value code of node "<<node_index<<"\t = "<<tournamentTree[node_index].offsetValueCode<<endl;
     
@@ -92,81 +102,69 @@ void TournamentTree::compareNodeValues(int left, int right)
     bool computeNewOffsetValueCode = false;
     if (isLeftLesserThanRight(left, right, computeNewOffsetValueCode))
     {
+         
         if (computeNewOffsetValueCode)
             computeOffsetForLoser(right, left);
+        printf("\nCompare Node Values:: OVC(left) = %d, OVC(right) = %d\n", tournamentTree[left].offsetValueCode, tournamentTree[right].offsetValueCode);
         tournamentTree[parent_index] = tournamentTree[left];
     }
     else
     {
         if (computeNewOffsetValueCode)
             computeOffsetForLoser(left, right);
+        printf("\nCompare Node Values:: OVC(left) = %d, OVC(right) = %d\n", tournamentTree[left].offsetValueCode, tournamentTree[right].offsetValueCode);
+
         tournamentTree[parent_index] = tournamentTree[right];
     }
 }
 
-void TournamentTree::fullComparison(TournamentTreeNode left, TournamentTreeNode right, int offset)
+void TournamentTree::fullComparison(TournamentTreeNode &left, TournamentTreeNode &right, int& offset)
 {
-    while (left.offset < FIELD_LENGTH)
+    while (offset < FIELD_LENGTH && left.element.members[0][offset] == right.element.members[0][offset])
     {
-        if (left.element.members[0][offset] == right.element.members[0][offset])
-        {
-            left.offset++;
-            offset++;
-            // tournamentTree[right].offset++;
-            // TODO: Note if left and right are considered as loser and winner, it doesnt make sense to increment the offset of the winner
-        }
-        else
-        {
-            break;
-        }
+        offset++;
     }
 }
 
-void TournamentTree::fullComparison(int left, int right, int offset)
+void TournamentTree::fullComparison(int left, int right, int& offset)
 {
-    while (tournamentTree[left].offset < FIELD_LENGTH)
+    while (offset < FIELD_LENGTH && tournamentTree[left].element.members[0][offset] == tournamentTree[right].element.members[0][offset])
     {
-        if (tournamentTree[left].element.members[0][offset] == tournamentTree[right].element.members[0][offset])
-        {
-            tournamentTree[left].offset++;
-            offset++;
-            // tournamentTree[right].offset++;
-            // TODO: Note if left and right are considered as loser and winner, it doesnt make sense to increment the offset of the winner
-        }
-        else
-        {
-            break;
-        }
+        offset++;
     }
 }
 
-bool TournamentTree::isLeftLesserThanRight(TournamentTreeNode left, TournamentTreeNode right, bool &computeNewOffsetValueCode)
+bool TournamentTree::isLeftLesserThanRight(TournamentTreeNode &left, TournamentTreeNode &right, bool &computeNewOffsetValueCode)
 {
     // check if nodes have the offsets computed
     // case 1: Yes
-    printf("\nisLeftLesserThanRight:: OVC(left) = %llu, OVC(right) = %llu", left.offsetValueCode, right.offsetValueCode);
+    printf("\nisLeftLesserThanRight:: OVC(left) = %d, OVC(right) = %d\n", left.offsetValueCode, right.offsetValueCode);
 
     if (left.offsetValueCode != -1 && right.offsetValueCode != -1)
     {
+        computeNewOffsetValueCode = false;
         if (left.offsetValueCode == right.offsetValueCode)
         {
             // do full comparison starting at offset
-            int offset = left.offset;
-            fullComparison(left, right, left.offset);
-            // TODO: Should the individual offsets be set to 0 after this?
-            return left.offset < FIELD_LENGTH && (left.element.members[0][offset] < right.element.members[0][offset]);
+            int offset = 0;
+            TRACE(true);
+            fullComparison(left, right, offset);
+            return offset < FIELD_LENGTH && ((int)left.element.members[0][offset] < (int)right.element.members[0][offset]);
         }
         else
         {
+            TRACE(true);
             return left.offsetValueCode < right.offsetValueCode;
         }
-        computeNewOffsetValueCode = false;
+        
     }
     else
     {
-        fullComparison(left, right, left.offset);
+        TRACE(true);
+        int offset = 0;
+        fullComparison(left, right, offset);
         computeNewOffsetValueCode = true;
-        return left.offset < FIELD_LENGTH && (left.element.members[left.offset] < right.element.members[left.offset]);
+        return offset < FIELD_LENGTH && ((int)left.element.members[0][offset] < (int)right.element.members[0][offset]);
     }
     /*
     If a.OVC is computed && b.OVC is computed:
@@ -188,19 +186,16 @@ bool TournamentTree::isLeftLesserThanRight(int left, int right, bool &computeNew
 {
     // check if nodes have the offsets computed
     // case 1: Yes
-    printf("\nisLeftLesserThanRight:: OVC(%d) = %d, OVC(%d) = %d", left, tournamentTree[left].offsetValueCode, right, tournamentTree[right].offsetValueCode);
+    printf("\nisLeftLesserThanRight:: OVC(%d) = %d, OVC(%d) = %d\n", left, tournamentTree[left].offsetValueCode, right, tournamentTree[right].offsetValueCode);
 
     if (tournamentTree[left].offsetValueCode != -1 && tournamentTree[right].offsetValueCode != -1)
     {
         if (tournamentTree[left].offsetValueCode == tournamentTree[right].offsetValueCode)
         {
-            // do full comparison starting at offset
-            int offset = tournamentTree[left].offset;
-            fullComparison(left, right, tournamentTree[left].offset);
-            // TODO: Should the individual offsets be set to 0 after this?
-            bool ans = tournamentTree[left].offset < FIELD_LENGTH && (tournamentTree[left].element.members[0][offset] < tournamentTree[right].element.members[0][offset]);
-            return ans;
-            // tournamentTree[left].element.members[0][offset] < tournamentTree[right].element.members[0][offset]
+            // do full comparison
+            int offset = 0;
+            fullComparison(left, right, offset);
+            return offset < FIELD_LENGTH && ((int)tournamentTree[left].element.members[0][offset] < (int)tournamentTree[right].element.members[0][offset]);
         }
         else
         {
@@ -210,7 +205,8 @@ bool TournamentTree::isLeftLesserThanRight(int left, int right, bool &computeNew
     }
     else
     {
-        fullComparison(left, right, tournamentTree[left].offset);
+        int offset = 0;
+        fullComparison(left, right, offset); // TODO: whats the point of this comparison
         computeNewOffsetValueCode = true;
     }
     /*
@@ -227,7 +223,6 @@ bool TournamentTree::isLeftLesserThanRight(int left, int right, bool &computeNew
         Do full comparison
         Compute OVC of loser w.r.t winner
     */
-   //TODO:
    return false;
 }
 
@@ -258,7 +253,7 @@ void TournamentTree::initialPop(int index)
     initialPop(right(index));
 }
 
-void TournamentTree::updateTreeStructure(TournamentTreeNode node, int parent_index, TournamentTreeNode parent)
+void TournamentTree::updateTreeStructure(TournamentTreeNode &node, int parent_index, TournamentTreeNode &parent)
 {
     if (parent_index == 0)
     {
@@ -281,7 +276,9 @@ void TournamentTree::updateTreeStructure(TournamentTreeNode node, int parent_ind
     }
     if (computeNewOffsetValueCode)
         computeOffsetForLoser(larger, smaller);
-
+    
+    printf("\nupdateTreeStructure:: OVC(larger) = %d, OVC(smaller) = %d", larger.offsetValueCode, smaller.offsetValueCode);
+    
     grandParent = tournamentTree[grand_parent_index];
     tournamentTree[parent_index] = larger;
 
@@ -306,7 +303,7 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
         tournamentTree[k + run_id].element = in[run_id].front();
         tournamentTree[k + run_id].runId = run_id;
         in[run_id].pop();
-        cout<<"queue size of partitoitn: "<< run_id<<" :"<<in[run_id].size()<<endl;
+        cout<<"queue size of partition: "<< run_id<<" :"<<in[run_id].size()<<endl;
     }
     else
     {
@@ -330,7 +327,7 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
                 in[run_id].push(lateFence);
                 return;
             }
-                cout<<" Read data log 3\n";
+            cout<<" Read data log 3\n";
             c.setRecordsInPartition(run_id, records_loaded_into_dram);
             c.read(run_id); // refilling the cache from DRAM since it failed earlier
         }
@@ -354,11 +351,12 @@ void TournamentTree::readNextValueFromRun(vector<queue<RecordStructure> > &in, i
     tournamentTree[k + run_id].offset = 0;
     readNextValueFromRunUtil(in, k, run_id);
     printf("\nNew value read = %s ", tournamentTree[k + run_id].element.members[0].c_str());
-    printf("Its offset = %llu", tournamentTree[k + run_id].offsetValueCode);
+    printf("Its offset = %d", tournamentTree[k + run_id].offsetValueCode);
 }
 
 void appendDataToDestination(string sourceFilePath, string destinationFilePath)
 {
+    TRACE(true);
     ifstream inputFile(sourceFilePath);
 	ofstream outputFile(destinationFilePath, ios::app);
 	if (inputFile.is_open() && outputFile.is_open())
@@ -366,7 +364,6 @@ void appendDataToDestination(string sourceFilePath, string destinationFilePath)
 		outputFile << inputFile.rdbuf();
 		inputFile.close();
 		outputFile.close();
-		// clearRam();
 	}
 	else
 	{
@@ -376,14 +373,12 @@ void appendDataToDestination(string sourceFilePath, string destinationFilePath)
 
 bool isFileFull(string filePath, long sizeToCheck)
 {
+    TRACE(true);
     FILE *file = fopen(filePath.c_str(), "r");
     if (file)
     {
-        // Move to the end of the file
-        fseek(file, 0, SEEK_END);
-
-        // Get the current position, which is the size of the file
-        long size = ftell(file);
+        fseek(file, 0, SEEK_END); // Move to the end of the file
+        long size = ftell(file); // Get the current position, which is the size of the file
 
         if (size >= sizeToCheck)
         {
@@ -391,12 +386,7 @@ bool isFileFull(string filePath, long sizeToCheck)
             fclose(file);
             return true;
         }
-        else
-        {
-            // cout << "Size = " << size << endl;
-
-            printf("size is not 8KB.\n");
-        }
+        printf("size is not 8KB.\n");
         fclose(file);
     }
     else
@@ -426,19 +416,20 @@ void writeSortedRecordToFile(RecordStructure rs)
             Truncate DRAM_OUT data
         Append this new record to DRAM_OUT
     */
-    if (isFileFull("out/DRAM_OUT.txt", RoundDown(8 * 1024, recordsize)))
+    if (isFileFull(DRAM_OUT_FILE_NAME, RoundDown(8 * 1024, recordsize)))
     {
-        if (isFileFull("out/SSD_OUT.txt", RoundDown(1024 * 1024, recordsize)))
+        if (isFileFull(SSD_OUT_FILE_NAME, RoundDown(1024 * 1024, recordsize)))
         {
-            appendDataToDestination("out/SSD_OUT.txt", "out/HDD_OUT.txt");
-            truncateFile("out/SSD_OUT.txt");
+            appendDataToDestination(SSD_OUT_FILE_NAME, HDD_OUT_FILE_NAME);
+            truncateFile(SSD_OUT_FILE_NAME.c_str());
         }
-        appendDataToDestination("out/DRAM_OUT.txt", "out/SSD_OUT.txt");
-        truncateFile("out/DRAM_OUT.txt");
+        appendDataToDestination(DRAM_OUT_FILE_NAME, SSD_OUT_FILE_NAME);
+        truncateFile(DRAM_OUT_FILE_NAME);
     }
-    FILE *file = fopen("out/DRAM_OUT.txt", "a");
+    FILE *file = fopen(DRAM_OUT_FILE_NAME.c_str(), "a");
     fprintf(file, "%s,%s,%s,%s\n", rs.members[0].c_str(), rs.members[1].c_str(), rs.members[2].c_str(), rs.members[3].c_str());
-cout<<"Value written to DRAM is "<<rs.members[0]<< endl;
+    
+    cout<<"\nValue written to DRAM is "<<rs.members[0]<< endl;
     fclose(file);
 }
 
@@ -447,7 +438,7 @@ void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure>> &in,
     // TournamentTreeNode *tournamentTree = getTree();
     while (tournamentTree[0].element.members[0] != "999999999999") // TODO: Handle the late fence case
     {
-        printf("Value written to output file\t=\t%s\n", tournamentTree[0].element.members[0].c_str());
+        printf("\nValue written to output file \t = \t %s \n", tournamentTree[0].element.members[0].c_str());
         writeSortedRecordToFile(tournamentTree[0].element);
         readNextValueFromRun(in, k, tournamentTree[0].runId);
 
@@ -491,8 +482,8 @@ void mergeFiles(DRAM d, Cache c, vector<queue<RecordStructure> > &cache_array, i
     // tt.printTreeOfLosers();
 
     tt.performTreeOfLosersSort(cache_array, k);
-    appendDataToDestination("out/SSD_OUT.txt", "out/HDD_OUT.txt");
-    truncateFile("out/SSD_OUT.txt");    
+    // appendDataToDestination("out/SSD_OUT.txt", "out/HDD_OUT.txt");
+    // truncateFile("out/SSD_OUT.txt");    
     appendDataToDestination("out/DRAM_OUT.txt", "out/SSD_OUT.txt");
     truncateFile("out/DRAM_OUT.txt");
     appendDataToDestination("out/SSD_OUT.txt", "out/HDD_OUT.txt");
@@ -509,7 +500,7 @@ void externalSort(DRAM d, Cache c, int num_ways)
         // cache_array.push_back(queue<RecordStructure>());
         cache_array.push_back(c.loadDataForRun(i));
     }
-    cout<<"generated runs "<<endl;
+    cout<<"Generated runs "<<endl;
     /*
         cache_array[i] = vector<RecordStructure> -> stores records of the ith partition
         cache_array[i][j] -> stores an individual record
