@@ -59,6 +59,7 @@ int DRAM::read(int partition)
     readOffsets[partition] = inputFile.tellg();
     cout<<"ssd end point is "<<readOffsets[partition]<<endl;
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
+    cout<<"\nRecords consumed = "<<records_to_consume<<"\n Records in partition "<<partition<<" = "<<records_in_partition[partition]<<endl;
     dramFile.close();
     inputFile.close();
     return records_to_consume;

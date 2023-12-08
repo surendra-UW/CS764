@@ -56,13 +56,15 @@ bool verifySortOrder(char *outputFile) {
         return false;
     }
 
-    int previousValue = std::numeric_limits<int>::min();
-    int currentValue;
+    string previousValue = ".";//std::numeric_limits<int>::min();
+    string currentValue;
 
     // Check if a[i] >= a[i-1] for each value in the output file
+    int i = 0;
     while (output >> currentValue) {
+        i++;
         if (currentValue < previousValue) {
-            std::cerr << "Sort order mismatch found." << std::endl;
+            std::cerr << "Sort order mismatch found at "<<i<<"\t"<<currentValue << std::endl;
             return false;
         }
         previousValue = currentValue;
@@ -73,6 +75,7 @@ bool verifySortOrder(char *outputFile) {
 }
 
 int main(){
-    verifySets("HDD.txt","out/HDD_OUT.txt");
+    // verifySets("./in/HDD.txt","out/HDD_OUT.txt");
+    verifySortOrder("./out/HDD_OUT.txt");
     return 0;
 }

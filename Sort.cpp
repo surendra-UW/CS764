@@ -1,18 +1,12 @@
 
 #include "defs.h"
 #include "Sort.h"
-
 #include "constants.h"
-// #include "Cache.h"
-
 #include "internal_sort.h"
 #include "TournamentTree.h"
 #include "DRAM.h"
 #include "SSD.h"
 using namespace std;
-
-#define HDD_PAGE_SIZE 1024
-#define NWAY_MERGE 8
 
 int recordsize = 0;
 SortPlan::SortPlan(Plan *const input) : _input(input)
@@ -33,15 +27,15 @@ Iterator *SortPlan::init() const
 } // SortPlan::init
 
 SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(plan->_input->init()),
-														 _consumed(0), _produced(0), _recsize(1000)
+														 _consumed(0), _produced(0), _recsize(1004)
 {
 	TRACE(true);
 
 	// TODO: hard coding and commenting records generation
 	// while (_input->next())
 	// 	++_consumed;
-	_consumed = 10000;//13258810;
-	delete _input;
+	_consumed = 1000000/2;//13258810;
+	
 
 	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
 	// if (!inputFile)
@@ -68,6 +62,7 @@ SortIterator::~SortIterator()
 	traceprintf("produced %lu of %lu rows\n",
 				(unsigned long)(_produced),
 				(unsigned long)(_consumed));
+	delete _input;
 } // SortIterator::~SortIterator
 
 // external sort
@@ -85,6 +80,7 @@ bool SortIterator::next()
 uint getMaxSSDBatches()
 {
 	uint64_t partitions = (SSD_SIZE_IN_BYTES) / (DRAM_SIZE_IN_BYTES);
+	cout<<"Partition Count = "<<partitions<<endl;
 	return (uint)(0.99 * partitions);
 }
 
@@ -99,27 +95,27 @@ bool SortIterator::internalSort()
 		std::vector<RecordStructure> arr;
 		uint dramRecords = divide(RoundDown(DRAM_SIZE_IN_BYTES, _recsize), (size_t)_recsize);
 		uint recordsToConsume = (_consumed - _produced) > dramRecords ? dramRecords : (_consumed - _produced);
-		cout << "dram records " << dramRecords << "rec to consusc " << recordsToConsume << endl;
+		cout << "dram records " << dramRecords << " records to consume " << recordsToConsume << endl;
 		dram.loadFromHDD(recordsToConsume);
 		cout << "loading ram with rec " << recordsToConsume << endl;
-		arr = read_ramfile("DRAM.txt");
+		arr = read_ramfile();
 		quickSort(arr, customComparator);
-		write_ramfile("DRAM.txt", arr);
+		write_ramfile(arr);
 		arr.clear(); // Remove all elements
 		arr.shrink_to_fit();
 		_produced = _produced + recordsToConsume;
-		if (!copyRamToHDD())
+		if (!copyRamToHDD()) // TODO: HDD or SSD ?
 			exit(1);
 		dram.clearRam();
 		batches++;
-		cout << "current bacth " << batches << endl;
+		cout << "current batch " << batches << endl;
 	}
 }
 
 bool SortIterator::copyRamToHDD()
 {
-	ifstream inputFile("DRAM.txt");
-	ofstream outputHDDFile("SSD.txt", ios::app);
+	ifstream inputFile(DRAM_FILE_NAME);
+	ofstream outputHDDFile(SSD_FILE_NAME, ios::app);
 	if (inputFile.is_open() && outputHDDFile.is_open())
 	{
 		outputHDDFile << inputFile.rdbuf();
@@ -148,11 +144,6 @@ int SortIterator::getRecordSize()
 int SortIterator::externalMerge()
 {
 	TRACE(true);
-	// uint64_t dram_partition_size = DRAM_SIZE_IN_BYTES / batches;
-	// uint64_t rounded_dram_block = RoundDown(dram_partition_size, _recsize);
-	// uint32_t cache_partition_size = CACHE_SIZE_IN_BYTES / batches;
-	// uint32_t rounded_cache_block = RoundDown(cache_partition_size, _recsize);
-
 	//load dram all partitions
 	DRAM dram_merge(batches);
 	for (int i = 0; i < batches; i++)

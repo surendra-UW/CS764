@@ -71,7 +71,7 @@ bool ScanIterator::next()
         }
 
         // Write the generated strings to a file
-        std::ofstream outputFile("HDD.txt", std::ios::app);
+        std::ofstream outputFile("./in/HDD.txt", std::ios::app);
         if (!outputFile) {
             std::cerr << "Error opening file for appending." << std::endl;
             return 1;

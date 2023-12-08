@@ -3,38 +3,30 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "constants.h"
 #include "internal_sort.h"
 using namespace std;
 
 bool customComparator(const RecordStructure &a, const RecordStructure &b)
 {
-    if (a.members[0] != b.members[0])
-    {
+    // if (a.members[0] != b.members[0])
+    // {
         return a.members[0] < b.members[0];
-    }
-    else if (a.members[1] != b.members[1])
-    {
-        return a.members[1] < b.members[1];
-    }
-    else if (a.members[2] != b.members[2])
-    {
-        return a.members[2] < b.members[2];
-    }
-    else
-    {
-        return a.members[3] < b.members[3];
-    }
+    // }
 }
 
-std::vector<RecordStructure> read_ramfile(char *inputfile)
+std::vector<RecordStructure> read_ramfile()
 {
-    std::ifstream input_file(inputfile);
+    std::ifstream input_file(DRAM_FILE_NAME);
 
     if (!input_file)
     {
         std::cerr << "Error opening input file!" << std::endl;
     }
-
+    input_file.seekg(0, ios::end);
+    streampos end = input_file.tellg();
+    cout<<"ram file size "<<end/1004<<endl;
+    input_file.seekg(0, ios::beg);
     // Read data from the file and store it in a vector of RecordStructure
     std::vector<RecordStructure> arr;
     std::string line, column;
@@ -63,27 +55,25 @@ std::vector<RecordStructure> read_ramfile(char *inputfile)
     cout << "array size after reading " << arr.size() << endl;
     return arr;
 }
-void write_ramfile(char *inputfile, std::vector<RecordStructure> &arr)
+void write_ramfile(std::vector<RecordStructure> &arr)
 {
-    FILE *output_file = fopen(inputfile, "w");
+    ofstream outFile(DRAM_FILE_NAME);
 
-    if (!output_file)
+    if (!outFile.is_open())
     {
         std::cerr << "Error opening output file!" << std::endl;
     }
 
-    cout << "aray size after internal sorting "<<arr.size() << endl;
+    cout << "array size after internal sorting "<<arr.size() << endl;
     // Write the sorted data back to the file
     for (size_t i = 0; i < arr.size(); ++i)
     {
         const RecordStructure &record = arr[i];
-        fprintf(output_file, "%s,%s,%s,%s\n",
-                static_cast<std::string>(record.members[0]).c_str(),
-                static_cast<std::string>(record.members[1]).c_str(),
-                static_cast<std::string>(record.members[2]).c_str(),
-                static_cast<std::string>(record.members[3]).c_str());
+        outFile<< record.members[0] <<","<<record.members[1]<<","<<
+        record.members[2]<<","<<record.members[3]<<endl;
+
     }
-    fclose(output_file);
+    outFile.close();
 
     std::cout << "Sorting and writing to file complete." << std::endl;
 }

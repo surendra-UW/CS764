@@ -8,15 +8,16 @@ using namespace std;
 
 FILE *openFile(char *fileName, char *mode);
 
-void mergeFiles(DRAM d, Cache c, vector<queue<RecordStructure>> &in, int k);
+void mergeFiles(DRAM dram, Cache cache, vector<queue<RecordStructure>> &in, int k);
 
-void externalSort(DRAM d, Cache c, int num_ways);
+void externalSort(DRAM dram, Cache cache, int num_ways);
 class TournamentTree
 {
     TournamentTreeNode *tournamentTree;
     int num_nodes;
-    Cache c;
-    DRAM d;
+    Cache cache;
+    DRAM dram;
+    int full_string_comparisons_avoided = 0;
 
 public:
     int left(int i);
@@ -39,10 +40,11 @@ public:
     void initialPop(int index);
     void updateTreeStructure(TournamentTreeNode &node, int parent_index, TournamentTreeNode &parent);
     TournamentTreeNode *getTree();
-    TournamentTreeNode getMin();
-    TournamentTree(TournamentTreeNode a[], int size, DRAM d, Cache c);
+    // TournamentTreeNode getMin();
+    TournamentTree(TournamentTreeNode a[], int size, DRAM dram, Cache cache);
     void performTreeOfLosersSort(vector< queue<RecordStructure> > &in, int k);
     void readNextValueFromRun(vector< queue<RecordStructure> > &in, int k, int run_id);
     void readNextValueFromRunUtil(vector< queue<RecordStructure> > &in, int k, int run_id);
     TournamentTree();
+    void computeOffsetUtil(int nodeIndex, int offset);
 };
