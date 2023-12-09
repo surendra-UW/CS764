@@ -59,7 +59,7 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
         j =0;
 
         while(getline(column_stream, column, ',')) {
-            record.members[j] = stoull(column);
+            record.members[j] = column;//stoull(column);
             j++;
         }
 
@@ -70,7 +70,6 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
     // Clean up
     inputFile.close();
     cout<<"records pushed is "<<records_in_run.size()<<endl;
-    RecordStructure r = records_in_run.front();
     return records_in_run;
 }
 
