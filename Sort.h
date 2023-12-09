@@ -20,19 +20,11 @@ public:
 	SortIterator(SortPlan const *const plan);
 	~SortIterator();
 	bool next();
-	bool internalSort();
-	bool copyRamToHDD();
-	int getRecordSize();
-	int getBatches();
-	void clearRam();
-	int externalMerge();
-	void initRamMem(uint blockSize, int step);
-	bool loadRamBlocks(int partition, int ramOffset, int hddOffset, uint blockSize, int step);
 
 private:
 	SortPlan const *const _plan;
 	Iterator *const _input;
 	RowCount _consumed, _produced;
 	int _recsize;
-	uint batches;
+	uint runs;
 }; // class SortIterator

@@ -538,7 +538,7 @@ void writeSortedRecordToFile(RecordStructure rs)
     fclose(file);
 }
 
-void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure>> &in, int k)
+void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure> > &in, int k)
 {
     // TournamentTreeNode *tournamentTree = getTree();
     while (tournamentTree[0].element.members[0] != LATE_FENCE_VALUE) // TODO: Handle the late fence case
@@ -613,7 +613,6 @@ void externalSort(DRAM dram, Cache cache, int num_ways)
     vector<queue<RecordStructure> > cache_array;
     for (int i = 0; i < num_ways; i++)
     {
-        // cache_array.push_back(queue<RecordStructure>());
         cache_array.push_back(cache.loadDataForRun(i));
     }
     cout<<"Generated runs "<<endl;

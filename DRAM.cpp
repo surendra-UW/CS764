@@ -66,10 +66,6 @@ int DRAM::read(int partition)
     return records_to_consume;
 }
 
-void DRAM::write()
-{
-}
-
 void DRAM::clearRam()
 {
     ofstream clearRAM(DRAM_FILE_NAME, ofstream::trunc);
@@ -114,8 +110,8 @@ DRAM::DRAM(int NWAY) : _NWAY(NWAY)
 
 DRAM::~DRAM()
 {
-    // if(dramOffsets != NULL)
-    //     delete dramOffsets;
+    delete readOffsets;
+    delete records_in_partition;
 }
 
 /* This function loads data from HDD in 100MB into DRAM for internal sorting*/

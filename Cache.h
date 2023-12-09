@@ -9,11 +9,10 @@ class Cache : public Memory
 {
 public:
     int read(int partition) override;
-    void write() override;
-    // void clearRam();
     Cache(int NWAY);
     Cache();
     ~Cache();
+    void clearCache();
     streamoff getReadOffset(int partition);
     void setReadOffset(int partition, streamoff offset);
     queue<RecordStructure> loadDataForRun(int runId);

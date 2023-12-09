@@ -131,10 +131,6 @@ int Cache::read(int partition)
     return records_to_consume;
 }
 
-void Cache::write()
-{
-}
-
 Cache::Cache(int NWAY) : _NWAY(NWAY)
 {
     uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES / NWAY, recordsize);
@@ -169,6 +165,9 @@ Cache::Cache()
 
 Cache::~Cache()
 {
+    delete readOffsets;
+    delete records_in_partition;
+    delete cache_partition_offsets;
 }
 
 streamoff Cache::getReadOffset(int partition)
@@ -189,4 +188,10 @@ void Cache::setRecordsInPartition(int partition, uint32_t records_count)
 
 void Cache:: resetReadOffset(int partition) {
     this->readOffsets[partition] = RoundDown(DRAM_SIZE_IN_BYTES / _NWAY, recordsize)*partition;
+}
+
+void Cache:: clearCache()
+{
+    ofstream clearCache(CACHE_FILE_NAME, ofstream::trunc);
+    clearCache.close();
 }

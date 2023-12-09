@@ -8,7 +8,6 @@ class DRAM : public Memory
 {
 public:
     int read(int partition) override;
-    void write() override;
     void clearRam();
     DRAM(int NWAY);
     DRAM();

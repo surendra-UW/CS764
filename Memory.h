@@ -6,7 +6,6 @@ public:
     implementation to the derived classes */
     int max_partition_size;
     virtual int read(int partition) = 0;
-    virtual void write() = 0;
 
     virtual ~Memory() {}
 
