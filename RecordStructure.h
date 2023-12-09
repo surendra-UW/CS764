@@ -2,6 +2,7 @@
 #define FIELD_COUNT 4
 #define FIELD_LENGTH 333
 #define DOMAIN_OF_VALUES 256
+
 struct RecordStructure
 {
     std::string members[FIELD_COUNT];

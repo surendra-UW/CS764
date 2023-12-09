@@ -8,6 +8,7 @@ using namespace std;
 
 FILE *openFile(char *fileName, char *mode);
 
+
 void mergeFiles(DRAM dram, Cache cache, vector<queue<RecordStructure>> &in, int k);
 
 void externalSort(DRAM dram, Cache cache, int num_ways);

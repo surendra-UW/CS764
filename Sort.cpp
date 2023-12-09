@@ -34,8 +34,8 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	// TODO: hard coding and commenting records generation
 	// while (_input->next())
 	// 	++_consumed;
-	_consumed = 1000000/2;//13258810;
-	
+	_consumed = 13258810;
+	delete _input;
 
 	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
 	// if (!inputFile)
@@ -157,5 +157,6 @@ int SortIterator::externalMerge()
 	{
 		cache_merge.read(i);
 	}
+
 	externalSort(dram_merge, cache_merge, batches);
 }

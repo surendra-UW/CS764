@@ -159,6 +159,7 @@ bool TournamentTree::isLeftLesserThanRight(TournamentTreeNode &left, TournamentT
     // case 1: Yes
     printf("\nisLeftLesserThanRight:: OVC(left) = %d, OVC(right) = %d\n", left.offsetValueCode, right.offsetValueCode);
 
+
     if (left.offsetValueCode != -1 && right.offsetValueCode != -1){
         computeNewOffsetValueCode = false;
         if (left.offsetValueCode == right.offsetValueCode){
@@ -407,6 +408,7 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
                 // TODO: SSD Logic - For final merge step
                 // All the data in this run has been read.
                 // Pass late fence - NULL vector/ empty vector for termination of the run
+
                 RecordStructure lateFence = {LATE_FENCE_VALUE, "999999999", "999999999"}; // todo: change this late fence
                 in[run_id].push(lateFence);
                 tournamentTree[k + run_id].element = in[run_id].front();
@@ -420,6 +422,7 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
             cache.read(run_id); // refilling the cache from DRAM since it failed earlier
         }
         in[run_id] = cache.loadDataForRun(run_id);
+
         cout<<"loading new batch for run "<<run_id<<" queue size "<<in[run_id].size()<<endl;
         cout<<" Read data log 4\n";
 
@@ -448,8 +451,10 @@ void TournamentTree::readNextValueFromRun(vector<queue<RecordStructure> > &in, i
     tournamentTree[k + run_id].offsetValueCode = -1;
     tournamentTree[k + run_id].offset = 0;
     readNextValueFromRunUtil(in, k, run_id);
+  
     printf("\nNew value read = %s ", tournamentTree[k + run_id].element.members[0].c_str());
     printf("Its offset = %d", tournamentTree[k + run_id].offsetValueCode);
+
 }
 
 void appendDataToDestination(string sourceFilePath, string destinationFilePath)
@@ -480,11 +485,13 @@ bool isFileFull(string filePath, long sizeToCheck)
 
         if (size >= sizeToCheck)
         {
-            printf("File size is exactly %llu.\n", sizeToCheck);
+            // printf("File size is exactly %ld.\n", sizeToCheck);
             fclose(file);
             return true;
         }
+
         printf("size is not %d\n",sizeToCheck);
+
         fclose(file);
     }
     else
@@ -536,6 +543,7 @@ void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure>> &in,
     // TournamentTreeNode *tournamentTree = getTree();
     while (tournamentTree[0].element.members[0] != LATE_FENCE_VALUE) // TODO: Handle the late fence case
     {
+
             cout<<"\n***********************\n";
     printTreeOfLosers();
     cout<<"\n***********************\n";
@@ -552,6 +560,7 @@ void TournamentTree::performTreeOfLosersSort(vector<queue<RecordStructure>> &in,
         // printf("Printing Tree after UPDATING THE STRUCTURE\n");
         // tt.printTreeOfLosers();
     }
+
     cout<<"Total full string comparisons avoided = "<<full_string_comparisons_avoided<<endl;
 }
 

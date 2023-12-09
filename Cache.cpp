@@ -70,11 +70,6 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
     // Clean up
     inputFile.close();
     cout<<"records pushed is "<<records_in_run.size()<<endl;
-    if(!records_in_run.empty()){
-        RecordStructure r = records_in_run.front();
-        // cout<<"records columns "<<r.members[0]<<" "<<r.members[1]<<" "<<r.members[2]<<" "<<r.members[3]<<endl;
-    }
-
     return records_in_run;
 }
 
@@ -123,6 +118,7 @@ int Cache::read(int partition)
     {
         int read_block = block_size > load_size ? load_size : block_size;
         inputFile.read(readBuffer, read_block);
+        // cout<<"cache read data: "<<readBuffer<<"length is "<<sizeof(readBuffer)<<endl;;
         cacheFile.write(readBuffer, read_block);
         block_size -= read_block;
     }
