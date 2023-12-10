@@ -70,5 +70,8 @@ Lines:
 ## Project's State:
 Completed.
 
-
+## Contributions:
+Surendra Parla - Spilling from SSD to disk, Spilling memory-to-SSD
+Neha Chadaga - Quicksort, Verifying sets of rows & values, Verifying sort order
+Srihari Sridharan - Tournament Tree, Offset Value Coding, Minimum count of row and column comparisons
 
