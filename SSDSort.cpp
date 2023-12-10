@@ -1,4 +1,3 @@
-
 #include "defs.h"
 #include "SSDSort.h"
 #include "unistd.h"
@@ -74,9 +73,36 @@ bool SSDSortIterator::internalSort()
 		dram.loadFromHDD(recordsToConsume);
 		cout << "loading ram with rec " << recordsToConsume << endl;
 
-		arr = read_ramfile();
-		quickSort(arr, customComparator);
-		write_ramfile(arr);
+		const int MINI_RUN_SIZE = 1024*1024;
+		uint miniRecordsOffset = divide(RoundDown(MINI_RUN_SIZE , recordsize), (size_t)recordsize);
+		std::ifstream input_file(DRAM_FILE_NAME.c_str(), std::ios::binary);
+	
+	    uint i=0;
+		std::streampos currentPosition;
+        while (!input_file.eof())
+	     {
+			uint readBlocks = i * miniRecordsOffset;
+			arr = read_ramfile(currentPosition+readBlocks, input_file, miniRecordsOffset);
+			i++;
+		 }
+		 input_file.close();
+
+
+
+		/*for(int i = 0; i < numChunks; ++i)
+		{
+            auto start = arr.begin() + i * miniRecords;
+            auto end = start + miniRecords;
+            if (end > arr.end()) {
+               end = arr.end();
+             }
+            std::vector<RecordStructure> arrMini(start, end);
+			quickSort(arrMini, customComparator);
+			write_ramfile(arrMini);
+			arrMini.clear();
+		}*/
+		//quickSort(arr, customComparator);
+		//write_ramfile(arr);
 		arr.clear(); // Remove all elements
 
 		_produced = _produced + recordsToConsume;

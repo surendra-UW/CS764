@@ -1,8 +1,10 @@
+#include "defs.h"
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "unistd.h"
 #include "constants.h"
 #include "internal_sort.h"
 using namespace std;
@@ -15,7 +17,34 @@ bool customComparator(const RecordStructure &a, const RecordStructure &b)
     // }
 }
 
-std::vector<RecordStructure> read_ramfile()
+std::vector<RecordStructure> read_ramfile(std::streampos lastReadPosition, std::ifstream input_file, uint miniRecordsOffset)
+{
+    input_file.seekg(lastReadPosition, std::ios::beg);
+    std::vector<RecordStructure> arr;
+    std::string line, column;
+
+     while(miniRecordsOffset!=0)
+    {
+        std::istringstream ss(line);
+        std::string token;
+        RecordStructure record;
+
+        int j = 0;
+        while (std::getline(ss, column, ','))
+        {
+            record.members[j] = column;
+            j++;
+        }
+
+        arr.push_back(record);
+        miniRecordsOffset--;
+    }
+    std::cout << "array size after reading " << arr.size() << " records." << std::endl;
+    return arr;
+}
+
+
+/*std::vector<RecordStructure> read_ramfile()
 {
     std::ifstream input_file(DRAM_FILE_NAME);
 
@@ -54,10 +83,11 @@ std::vector<RecordStructure> read_ramfile()
     input_file.close();
     cout << "array size after reading " << arr.size() << endl;
     return arr;
-}
+}*/
 void write_ramfile(std::vector<RecordStructure> &arr)
 {
-    ofstream outFile(DRAM_FILE_NAME);
+    //ofstream outFile(DRAM_FILE_NAME);
+    std::ofstream outFile(DRAM_FILE_NAME.c_str(), std::ios::app);
 
     if (!outFile.is_open())
     {

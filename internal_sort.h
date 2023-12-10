@@ -7,7 +7,7 @@ void qSort(std::vector<RecordStructure>& arr, int left, int right, bool (*compar
 
 int partition(std::vector<RecordStructure>& arr, int left, int right, bool (*comparator)(const RecordStructure&, const RecordStructure&));
 
-std::vector<RecordStructure> read_ramfile();
+std::vector<RecordStructure> read_ramfile(std::streampos lastReadPosition, std::ifstream input_file, uint miniRecordsOffset);
 
 void write_ramfile(std::vector<RecordStructure>& arr);
 
