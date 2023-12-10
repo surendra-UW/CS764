@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include "Scan.h"
+#include "constants.h"
 #include "RecordStructure.h"
 // #include <string>
 
@@ -71,7 +72,7 @@ bool ScanIterator::next()
         }
 
         // Write the generated strings to a file
-        std::ofstream outputFile("./in/HDD.txt", std::ios::app);
+        std::ofstream outputFile(HDD_FILE_NAME, std::ios::app);
         if (!outputFile) {
             std::cerr << "Error opening file for appending." << std::endl;
             return 1;

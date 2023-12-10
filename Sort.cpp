@@ -36,9 +36,8 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	TRACE(true);
 
 	// TODO: hard coding and commenting records generation
-	// while (_input->next())
-	// 	++_consumed;
-	_consumed = 1400000;
+	while (_input->next())
+		++_consumed;
 	delete _input;
 
 	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
@@ -83,8 +82,8 @@ bool SortIterator::next()
 
 void SortIterator:: ssdSort() {
 	TRACE(true);
-	SSDSortPlan const *plan = new SSDSortPlan(_produced, _consumed);
-	SSDSortIterator *ssd_sort_iterator = plan->init();
+	Plan const *ssd_plan = new SSDSortPlan(_produced, _consumed);
+	Iterator *ssd_sort_iterator = ssd_plan->init();
 	while (ssd_sort_iterator->next()) runs++;
 }
 

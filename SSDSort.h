@@ -8,7 +8,7 @@ class SSDSortPlan : public Plan
 public:
 	SSDSortPlan(RowCount produced, RowCount consumed);
 	~SSDSortPlan();
-	SSDSortIterator *init() const;
+	Iterator *init() const;
 
 private:
 	RowCount const _produced;

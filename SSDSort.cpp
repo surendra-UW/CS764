@@ -20,7 +20,7 @@ SSDSortPlan::~SSDSortPlan()
 	TRACE(true);
 } // SortPlan::~SortPlan
 
-SSDSortIterator *SSDSortPlan::init() const
+Iterator *SSDSortPlan::init() const
 {
 	TRACE(true);
 	return new SSDSortIterator(this);
