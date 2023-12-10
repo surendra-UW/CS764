@@ -51,4 +51,7 @@ public:
     TournamentTree();
     void computeOffsetUtil(int nodeIndex, int offset);
     void pushLateFence(vector< queue<RecordStructure> > &in, int k, int run_id);
+
+    private:
+        void writeSortedRecordToFile(RecordStructure rs);
 };

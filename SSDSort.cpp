@@ -131,4 +131,5 @@ int SSDSortIterator::externalMerge()
 
 	cache_merge.clearCache();
     dram_merge.clearRam();
+	return 0;
 }

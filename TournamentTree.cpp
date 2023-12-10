@@ -527,7 +527,7 @@ void truncateFile(string sourceFile)
     clearFile.close();
 }
 
-void writeSortedRecordToFile(RecordStructure rs)
+void TournamentTree::writeSortedRecordToFile(RecordStructure rs)
 {
     /*
     Check if DRAM_OUT has 8KB of data.
@@ -540,11 +540,13 @@ void writeSortedRecordToFile(RecordStructure rs)
             Truncate DRAM_OUT data
         Append this new record to DRAM_OUT
     */
-    if (isFileFull(DRAM_OUT_FILE_NAME, RoundDown(8 * 1024, recordsize)))
+    if (isFileFull(DRAM_OUT_FILE_NAME, RoundDown(16 * 1024, recordsize)))
     {
-        if (isFileFull(SSD_OUT_FILE_NAME, RoundDown(1024 * 1024, recordsize)))
+        if (isFileFull(SSD_OUT_FILE_NAME, RoundDown(8*1024 * 1024, recordsize)))
         {
-            appendDataToDestination(SSD_OUT_FILE_NAME, HDD_OUT_FILE_NAME);
+            string outputFile = HDD_OUT_FILE_NAME;
+            if(ssd != nullptr) outputFile = HDD_OUT2_FILE_NAME;
+            appendDataToDestination(SSD_OUT_FILE_NAME, outputFile);
             truncateFile(SSD_OUT_FILE_NAME.c_str());
         }
         appendDataToDestination(DRAM_OUT_FILE_NAME, SSD_OUT_FILE_NAME);
