@@ -20,6 +20,8 @@ public:
 	SortIterator(SortPlan const *const plan);
 	~SortIterator();
 	bool next();
+	void ssdSort();
+	void externalMerge();
 
 private:
 	SortPlan const *const _plan;

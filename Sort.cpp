@@ -5,8 +5,6 @@
 #include "constants.h"
 #include "internal_sort.h"
 #include "TournamentTree.h"
-#include "DRAM.h"
-#include "SSD.h"
 #include "Iterator.h"
 #include "SSDSort.h"
 
@@ -33,14 +31,14 @@ Iterator *SortPlan::init() const
 } // SortPlan::init
 
 SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(plan->_input->init()),
-														 _consumed(0), _produced(0), _recsize(52)
+														 _consumed(0), _produced(0), _recsize(1004)
 {
 	TRACE(true);
 
 	// TODO: hard coding and commenting records generation
 	// while (_input->next())
 	// 	++_consumed;
-	_consumed = 13258810;
+	_consumed = 15000000;
 	delete _input;
 
 	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
@@ -76,10 +74,48 @@ bool SortIterator::next()
 	TRACE(true);
 	if (_produced >= _consumed)
 		return false;
+
+	ssdSort();
+	externalMerge();
 	
+	return true;
+} // SortIterator::next
+
+void SortIterator:: ssdSort() {
+	TRACE(true);
 	Plan const *plan = new SSDSortPlan(_produced, _consumed);
 	Iterator *ssd_sort_iterator = plan->init();
 	ssd_sort_iterator->run();
 	runs++;
-	return true;
-} // SortIterator::next
+}
+
+void SortIterator:: externalMerge() {
+	TRACE(true);
+
+	//load SSD all partitions 
+	SSD ssd_merge(runs);
+	for (int i = 0; i < runs; i++)
+	{
+		ssd_merge.read(i);
+	}
+
+	//load dram all partitions
+	DRAM dram_merge(runs, true);
+	for (int i = 0; i < runs; i++)
+	{
+		dram_merge.read(i);
+	}
+
+	//load cache all partitions
+	Cache cache_merge(runs);
+	for (int i = 0; i < runs; i++)
+	{
+		cache_merge.read(i);
+	}
+
+	externalSort(&ssd_merge, &dram_merge, cache_merge, runs);
+
+	ssd_merge.clearSSD();
+	cache_merge.clearCache();
+    dram_merge.clearRam();
+}

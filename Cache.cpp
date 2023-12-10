@@ -78,7 +78,7 @@ int Cache::read(int partition)
     TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
 
-    cout<<"max records to consume "<<records_to_consume<<endl;
+    cout<<"max records to consume "<<records_to_consume<<"partition"<<partition<<endl;
     cout<<"records left to consume  "<<records_in_partition[partition]<<endl;
 
     // check the records count left in SSD in this partition
@@ -100,6 +100,7 @@ int Cache::read(int partition)
     uint32_t block_size = records_to_consume*recordsize;
     uint partition_size = RoundDown(CACHE_SIZE_IN_BYTES / _NWAY, recordsize);
 
+    cout<<"calculating ofsets"<<endl;
     cache_partition_offsets[partition][0] = partition_size * partition;
     cache_partition_offsets[partition][1] = partition_size * partition + block_size;
     cout<<"seek offsets: cahce "<<partition_size * partition << " ram offset "<<readOffsets[partition]<<endl;
@@ -165,9 +166,10 @@ Cache::Cache()
 
 Cache::~Cache()
 {
-    delete readOffsets;
-    delete records_in_partition;
-    delete cache_partition_offsets;
+    TRACE(true);
+    // delete readOffsets;
+    // delete records_in_partition;
+    // delete cache_partition_offsets;
 }
 
 streamoff Cache::getReadOffset(int partition)

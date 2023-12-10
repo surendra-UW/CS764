@@ -2,6 +2,7 @@
 
 #include "Cache.h"
 #include "DRAM.h"
+#include "SSD.h"
 #include "TournamentTreeNode.h"
 
 using namespace std;
@@ -9,15 +10,16 @@ using namespace std;
 FILE *openFile(char *fileName, char *mode);
 
 
-void mergeFiles(DRAM dram, Cache cache, vector<queue<RecordStructure>> &in, int k);
+void mergeFiles(SSD *ssd, DRAM *dram, Cache cache, vector<queue<RecordStructure> > &in, int k);
 
-void externalSort(DRAM dram, Cache cache, int num_ways);
+void externalSort(SSD *ssd, DRAM *dram, Cache cache, uint num_ways);
 class TournamentTree
 {
     TournamentTreeNode *tournamentTree;
     int num_nodes;
     Cache cache;
-    DRAM dram;
+    DRAM *dram;
+    SSD *ssd;
     int full_string_comparisons_avoided = 0;
 
 public:
@@ -42,10 +44,11 @@ public:
     void updateTreeStructure(TournamentTreeNode &node, int parent_index, TournamentTreeNode &parent);
     TournamentTreeNode *getTree();
     // TournamentTreeNode getMin();
-    TournamentTree(TournamentTreeNode a[], int size, DRAM dram, Cache cache);
+    TournamentTree(TournamentTreeNode a[], int size, SSD *ssd, DRAM *dram, Cache cache);
     void performTreeOfLosersSort(vector< queue<RecordStructure> > &in, int k);
     void readNextValueFromRun(vector< queue<RecordStructure> > &in, int k, int run_id);
     void readNextValueFromRunUtil(vector< queue<RecordStructure> > &in, int k, int run_id);
     TournamentTree();
     void computeOffsetUtil(int nodeIndex, int offset);
+    void pushLateFence(vector< queue<RecordStructure> > &in, int k, int run_id);
 };

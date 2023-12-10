@@ -21,7 +21,7 @@ int SSD::read(int partition)
 {
     TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
-    cout<<"loading into dram: "<<partition<<endl;
+    cout<<"loading into ssd: "<<partition<<endl;
     // check the records count left in SSD in this partition
     if (records_in_partition[partition] == 0)
         return -1; // indicating end of partition
@@ -31,29 +31,30 @@ int SSD::read(int partition)
     {
         records_to_consume = records_in_partition[partition];
     }
-    uint32_t block_size = records_to_consume*recordsize;
+    uint64_t block_size = records_to_consume*recordsize;
+    //partition size to be used in SSD for merge step 
     uint partition_size = RoundDown(SSD_SIZE_IN_BYTES / _NWAY, recordsize);
 
     cout<<"dram block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
     cout<<"seek offsets: dram "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
 
-    ifstream inputFile(SSD_FILE_NAME);
-    fstream dramFile(SSD_FILE_NAME, ios::in | ios::out);
-    fileOpenCheck(inputFile, SSD_FILE_NAME);
-    fileOpenCheck(dramFile, SSD_FILE_NAME);
-    dramFile.seekp(partition_size * partition, ios::beg);
+    ifstream inputFile(HDD_OUT_FILE_NAME);
+    fstream ssdFile(SSD_FILE_NAME, ios::in | ios::out);
+    fileOpenCheck(inputFile, HDD_OUT_FILE_NAME);
+    fileOpenCheck(ssdFile, SSD_FILE_NAME);
+    ssdFile.seekp(partition_size * partition, ios::beg);
     inputFile.seekg(readOffsets[partition], ios::beg);
 
-    /* Loading into ram in the 1MB chunks due to os limitations
+    /* Loading into ssd in the 10MB chunks due to os limitations
     can be done in larger chunks if os supports */
-    const int load_size = 1 << 20;
+    const int load_size = 10 << 20;
     char *readBuffer= new char[load_size];
     while (block_size > 0 && !inputFile.eof())
     {
         int read_block = block_size > load_size ? load_size : block_size;
         inputFile.read(readBuffer, read_block);
-        // cout<<"dram read "<<readBuffer<<"length is "<<sizeof(readBuffer)<<endl;
-        dramFile.write(readBuffer, read_block);
+        // cout<<"ssd read "<<readBuffer<<"length is "<<sizeof(readBuffer)<<endl;
+        ssdFile.write(readBuffer, read_block);
         block_size -= read_block;
     }
     delete[] readBuffer;
@@ -61,7 +62,7 @@ int SSD::read(int partition)
     readOffsets[partition] = inputFile.tellg();
     cout<<"ssd end point is "<<readOffsets[partition]<<endl;
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
-    dramFile.close();
+    ssdFile.close();
     inputFile.close();
     return records_to_consume;
 }
@@ -75,7 +76,7 @@ void SSD::clearSSD()
 SSD::SSD()
 {
     fileName = SSD_FILE_NAME;
-    nextHierFileName = HDD_FILE_NAME;
+    nextHierFileName = HDD_OUT_FILE_NAME;
     sizeInBytes = SSD_SIZE_IN_BYTES;
 }
 
@@ -84,9 +85,11 @@ SSD::SSD(int NWAY) : _NWAY(NWAY)
     readOffsets = new streamoff[NWAY];
     records_in_partition = new uint32_t[NWAY];
     // initializing offsets for ssd
-    streamoff partition_size = RoundDown(SSD_SIZE_IN_BYTES, recordsize);
+    streamoff partition_size = 100*RoundDown(DRAM_SIZE_IN_BYTES, recordsize); //assuming max partitions for int sort is 100
     uint32_t max_records = partition_size / recordsize;
-    max_partition_size = RoundDown(SSD_SIZE_IN_BYTES / NWAY, recordsize);
+
+    //leave out some space for output buffer in SSD 
+    max_partition_size = RoundDown((0.999*SSD_SIZE_IN_BYTES) / NWAY, recordsize);
     TRACE(true);
     cout << "Max partition size of SSD = " << max_partition_size << endl;
 
@@ -97,9 +100,9 @@ SSD::SSD(int NWAY) : _NWAY(NWAY)
         if (i == NWAY - 1)
         {
             // last partition
-            ifstream inputFile(SSD_FILE_NAME, ios::binary | ios::ate);
-            streamoff ssd_size = inputFile.tellg();
-            records_in_partition[i] = (ssd_size - readOffsets[i]) / recordsize;
+            ifstream inputFile(HDD_OUT_FILE_NAME, ios::binary | ios::ate);
+            streamoff hdd_size = inputFile.tellg();
+            records_in_partition[i] = (hdd_size - readOffsets[i]) / recordsize;
             inputFile.close();
         }
     }

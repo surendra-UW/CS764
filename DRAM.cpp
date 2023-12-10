@@ -78,6 +78,8 @@ DRAM::DRAM()
     nextHierFileName = SSD_FILE_NAME;
     sizeInBytes = DRAM_SIZE_IN_BYTES;
     hddSortOffset = 0;
+    readOffsets = NULL;
+    records_in_partition = NULL;
     cout << "calling default constructor " << nextHierFileName << endl;
 }
 
@@ -86,7 +88,40 @@ DRAM::DRAM(int NWAY) : _NWAY(NWAY)
     readOffsets = new streamoff[NWAY];
     records_in_partition = new uint32_t[NWAY];
     // initializing offsets for ssd
-    streamoff partition_size = RoundDown(DRAM_SIZE_IN_BYTES, recordsize);
+    partition_size = RoundDown(DRAM_SIZE_IN_BYTES, recordsize);
+    uint32_t max_records = partition_size / recordsize;
+    max_partition_size = RoundDown(DRAM_SIZE_IN_BYTES / NWAY, recordsize);
+    TRACE(true);
+    cout << "Max partition size of DRAM = " << max_partition_size << endl;
+
+    for (int i = 0; i < NWAY; i++)
+    {
+        readOffsets[i] = i * partition_size;
+        records_in_partition[i] = max_records;
+        if (i == NWAY - 1)
+        {
+            // last partition
+            ifstream inputFile(SSD_FILE_NAME, ios::binary | ios::ate);
+            streamoff ssd_size = inputFile.tellg();
+            records_in_partition[i] = (ssd_size - readOffsets[i]) / recordsize;
+            inputFile.close();
+        }
+    }
+    // DRAM();
+}
+
+DRAM::DRAM(int NWAY, bool is_external_sort) : _NWAY(NWAY)
+{
+    if(!is_external_sort) {
+        DRAM(NWAY);
+        return;
+    }
+
+    readOffsets = new streamoff[NWAY];
+    records_in_partition = new uint32_t[NWAY];
+    // initializing offsets for ssd
+    //leave out some space for output buffer in SSD 
+    partition_size = RoundDown((0.999*SSD_SIZE_IN_BYTES) / NWAY, recordsize); 
     uint32_t max_records = partition_size / recordsize;
     max_partition_size = RoundDown(DRAM_SIZE_IN_BYTES / NWAY, recordsize);
     TRACE(true);
@@ -110,8 +145,8 @@ DRAM::DRAM(int NWAY) : _NWAY(NWAY)
 
 DRAM::~DRAM()
 {
-    delete readOffsets;
-    delete records_in_partition;
+    // delete readOffsets;
+    // delete records_in_partition;
 }
 
 /* This function loads data from HDD in 100MB into DRAM for internal sorting*/
@@ -137,4 +172,13 @@ void DRAM::loadFromHDD(uint recordsToConsume)
     cout<<"Dram Hdd offset is "<<hddSortOffset<<endl;
     HDDFile.close();
     DRAMFile.close();
+}
+
+void DRAM::setRecordsInPartition(int partition, uint32_t records_count)
+{
+    this->records_in_partition[partition] = records_count;
+}
+
+void DRAM:: resetReadOffset(int partition) {
+    this->readOffsets[partition] = partition_size*partition;
 }

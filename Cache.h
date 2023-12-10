@@ -25,4 +25,5 @@ private:
     streamoff *readOffsets;
     uint32_t *records_in_partition;
     int **cache_partition_offsets;
+    int max_partition_size;
 };

@@ -5,8 +5,7 @@
 #include "constants.h"
 #include "internal_sort.h"
 #include "TournamentTree.h"
-#include "DRAM.h"
-#include "SSD.h"
+
 using namespace std;
 
 #define HDD_PAGE_SIZE 1024
@@ -27,7 +26,7 @@ Iterator *SSDSortPlan::init() const
 	return new SSDSortIterator(this);
 } // SortPlan::init
 
-SSDSortIterator::SSDSortIterator(SSDSortPlan const *const plan) : _plan(plan), _produced(plan->_produced), batches(0)
+SSDSortIterator::SSDSortIterator(SSDSortPlan const *const plan) : _plan(plan), _produced(plan->_produced),_consumed(plan->_consumed), batches(0)
 {
 	TRACE(true);
 
@@ -46,7 +45,7 @@ SSDSortIterator::~SSDSortIterator()
 bool SSDSortIterator::next()
 {
 	TRACE(true);
-	if (_produced >= _consumed)
+	if (_produced >= _plan->_consumed)
 		return false;
 	internalSort();
 	externalMerge();
@@ -55,7 +54,7 @@ bool SSDSortIterator::next()
 
 uint getMaxSSDBatches()
 {
-	uint64_t partitions = (SSD_SIZE_IN_BYTES) / (DRAM_SIZE_IN_BYTES);
+	uint partitions = (SSD_SIZE_IN_BYTES) / (DRAM_SIZE_IN_BYTES);
 	return (uint)(0.99 * partitions);
 }
 
@@ -64,7 +63,8 @@ bool SSDSortIterator::internalSort()
 	DRAM dram;
 	uint max_batches = getMaxSSDBatches();
 
-	while ((_produced < _consumed) && (batches < max_batches))
+	cout<<"_produced "<<_produced<<"_consumed "<<_consumed<<"batches "<<batches<<" max_batches "<<max_batches<<endl;
+	while ((_produced < _plan->_consumed) && (batches < max_batches))
 	{
 		std::vector<RecordStructure> arr;
 		uint dramRecords = divide(RoundDown(DRAM_SIZE_IN_BYTES, recordsize), (size_t)recordsize);
@@ -91,8 +91,8 @@ bool SSDSortIterator::internalSort()
 
 bool SSDSortIterator::copyRamToHDD()
 {
-	ifstream inputFile("DRAM.txt");
-	ofstream outputHDDFile("SSD.txt", ios::app);
+	ifstream inputFile(DRAM_FILE_NAME);
+	ofstream outputHDDFile(SSD_FILE_NAME, ios::app);
 	if (inputFile.is_open() && outputHDDFile.is_open())
 	{
 		outputHDDFile << inputFile.rdbuf();
@@ -112,6 +112,7 @@ int SSDSortIterator::externalMerge()
 {
 	TRACE(true);
 
+	SSD *ssd = NULL;
 	//load dram all partitions
 	DRAM dram_merge(batches);
 	for (int i = 0; i < batches; i++)
@@ -126,7 +127,7 @@ int SSDSortIterator::externalMerge()
 		cache_merge.read(i);
 	}
 
-	externalSort(dram_merge, cache_merge, batches);
+	externalSort(ssd, &dram_merge, cache_merge, batches);
 
 	cache_merge.clearCache();
     dram_merge.clearRam();
