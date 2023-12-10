@@ -20,7 +20,7 @@ SSDSortPlan::~SSDSortPlan()
 	TRACE(true);
 } // SortPlan::~SortPlan
 
-Iterator *SSDSortPlan::init() const
+SSDSortIterator *SSDSortPlan::init() const
 {
 	TRACE(true);
 	return new SSDSortIterator(this);
@@ -60,7 +60,8 @@ uint getMaxSSDBatches()
 
 bool SSDSortIterator::internalSort()
 {
-	DRAM dram;
+	streamoff hddOffset = _produced*recordsize;
+	DRAM dram(hddOffset);
 	uint max_batches = getMaxSSDBatches();
 
 	cout<<"_produced "<<_produced<<"_consumed "<<_consumed<<"batches "<<batches<<" max_batches "<<max_batches<<endl;
@@ -87,6 +88,7 @@ bool SSDSortIterator::internalSort()
 		batches++;
 		cout << "current bacth " << batches << endl;
 	}
+	return true;
 }
 
 bool SSDSortIterator::copyRamToHDD()

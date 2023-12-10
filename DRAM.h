@@ -11,6 +11,7 @@ public:
     void clearRam();
     DRAM(int NWAY, bool is_external_sort);
     DRAM(int NWAY);
+    DRAM(streamoff hddOffset);
     DRAM();
     ~DRAM();
     void setRecordsInPartition(int partition, uint32_t records_count);

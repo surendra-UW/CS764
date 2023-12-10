@@ -71,16 +71,14 @@ void DRAM::clearRam()
     ofstream clearRAM(DRAM_FILE_NAME, ofstream::trunc);
     clearRAM.close();
 }
-
-DRAM::DRAM()
-{
-    fileName = DRAM_FILE_NAME;
-    nextHierFileName = SSD_FILE_NAME;
-    sizeInBytes = DRAM_SIZE_IN_BYTES;
-    hddSortOffset = 0;
+DRAM::DRAM() {
     readOffsets = NULL;
     records_in_partition = NULL;
-    cout << "calling default constructor " << nextHierFileName << endl;
+}
+
+DRAM::DRAM(streamoff hddOffset)
+{
+    hddSortOffset = hddOffset;
 }
 
 DRAM::DRAM(int NWAY) : _NWAY(NWAY)

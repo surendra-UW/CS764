@@ -8,7 +8,7 @@ class SSDSortPlan : public Plan
 public:
 	SSDSortPlan(RowCount produced, RowCount consumed);
 	~SSDSortPlan();
-	Iterator *init() const;
+	SSDSortIterator *init() const;
 
 private:
 	RowCount const _produced;
@@ -24,9 +24,10 @@ public:
     bool copyRamToHDD();
 	bool internalSort();
 	int externalMerge();
+	RowCount _produced;
 
 private:
 	SSDSortPlan const *const _plan;
-	RowCount _consumed, _produced;
-    uint batches;
+	RowCount _consumed;
+	int batches;
 }; // class SortIterator

@@ -80,6 +80,7 @@ SSD::SSD()
     sizeInBytes = SSD_SIZE_IN_BYTES;
 }
 
+//constructor for ssd sort
 SSD::SSD(int NWAY) : _NWAY(NWAY)
 {
     readOffsets = new streamoff[NWAY];
