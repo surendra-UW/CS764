@@ -5,6 +5,7 @@
 #include <string>
 #include "constants.h"
 #include "internal_sort.h"
+#include "defs.h"
 using namespace std;
 
 bool customComparator(const RecordStructure &a, const RecordStructure &b)
@@ -25,7 +26,7 @@ std::vector<RecordStructure> read_ramfile()
     }
     input_file.seekg(0, ios::end);
     streampos end = input_file.tellg();
-    cout<<"ram file size "<<end/1004<<endl;
+    //cout<<"ram file size "<<end/1004<<endl;
     input_file.seekg(0, ios::beg);
     // Read data from the file and store it in a vector of RecordStructure
     std::vector<RecordStructure> arr;
@@ -52,7 +53,7 @@ std::vector<RecordStructure> read_ramfile()
         arr.push_back(record);
     }
     input_file.close();
-    cout << "array size after reading " << arr.size() << endl;
+    //cout << "array size after reading " << arr.size() << endl;
     return arr;
 }
 void write_ramfile(std::vector<RecordStructure> &arr)
@@ -64,7 +65,7 @@ void write_ramfile(std::vector<RecordStructure> &arr)
         std::cerr << "Error opening output file!" << std::endl;
     }
 
-    cout << "array size after internal sorting "<<arr.size() << endl;
+    //cout << "array size after internal sorting "<<arr.size() << endl;
     // Write the sorted data back to the file
     for (size_t i = 0; i < arr.size(); ++i)
     {
@@ -74,8 +75,9 @@ void write_ramfile(std::vector<RecordStructure> &arr)
 
     }
     outFile.close();
+    		TRACE(true);
+	    traceprintf("All internally sorted records, written back to DRAM.\n");
 
-    std::cout << "Sorting and writing to file complete." << std::endl;
 }
 
 void quickSort(std::vector<RecordStructure> &arr, bool (*comparator)(const RecordStructure &, const RecordStructure &))

@@ -30,6 +30,7 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 														 _consumed(0), _produced(0), _recsize(1004)
 {
 	TRACE(true);
+	traceprintf("Starting to sort.\n");
 
 	// TODO: hard coding and commenting records generation
 	// while (_input->next())
@@ -68,7 +69,6 @@ SortIterator::~SortIterator()
 // external sort
 bool SortIterator::next()
 {
-	TRACE(true);
 	// if (_produced >= _consumed)
 	// 	return false;
 
@@ -99,6 +99,8 @@ bool SortIterator::internalSort()
 		dram.loadFromHDD(recordsToConsume);
 		cout << "loading ram with rec " << recordsToConsume << endl;
 		arr = read_ramfile();
+		TRACE(true);
+	    traceprintf("Sorting using quicksort on 1MB chunks in cache, taken from 100 MB records present in DRAM.\n");
 		quickSort(arr, customComparator);
 		write_ramfile(arr);
 		arr.clear(); // Remove all elements
@@ -121,6 +123,8 @@ bool SortIterator::copyRamToHDD()
 		outputHDDFile << inputFile.rdbuf();
 		inputFile.close();
 		outputHDDFile.close();
+				TRACE(true);
+	    traceprintf("All internally sorted records, written from DRAM to SSD.\n");
 		// clearRam();
 	}
 	else
@@ -143,13 +147,14 @@ int SortIterator::getRecordSize()
 
 int SortIterator::externalMerge()
 {
-	TRACE(true);
 	//load dram all partitions
 	DRAM dram_merge(batches);
 	for (int i = 0; i < batches; i++)
 	{
 		dram_merge.read(i);
 	}
+		TRACE(true);
+	    traceprintf("DRAM is loaded with records for external merge.\n");
 
 	//load cache all partitions
 	Cache cache_merge(batches);
@@ -157,6 +162,7 @@ int SortIterator::externalMerge()
 	{
 		cache_merge.read(i);
 	}
-
+		TRACE(true);
+	    traceprintf("Cache is loaded with records for external merge.\n");
 	externalSort(dram_merge, cache_merge, batches);
 }

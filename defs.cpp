@@ -10,11 +10,16 @@ Trace ::Trace(bool const trace, char const *const function,
 	: _output(trace), _function(function), _file(file), _line(line)
 {
 	_trace(">>>>>");
+	{
+    traceFile.open("trace0.txt", std::ios_base::app); // Open file in append mode
+    _trace(">>>>>");
+    }
 } // Trace::Trace
 
 Trace::~Trace()
 {
 	_trace("<<<<<");
+	 traceFile.close();
 } // Trace::~Trace
 
 void Trace::_trace(char const lead[])

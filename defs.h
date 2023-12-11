@@ -34,7 +34,7 @@ void Assert(bool const predicate,
 //
 #define ParamAssert(b) FinalAssert(b)
 
-#define traceprintf printf("%s:%d:%s ",                       \
+#define traceprintf printf("%s:%d:%s \n",                       \
 						   __FILE__, __LINE__, __FUNCTION__), \
 					printf
 
@@ -54,6 +54,7 @@ private:
 	char const *const _function;
 	char const *const _file;
 	int const _line;
+	std::ofstream traceFile;
 }; // class Trace
 
 #define TRACE(trace) Trace __trace(trace, __FUNCTION__, __FILE__, __LINE__)

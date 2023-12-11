@@ -25,7 +25,6 @@ int *Cache::getCachePartitionOffsets(int runId)
 
 queue<RecordStructure> Cache::loadDataForRun(int runId)
 {
-    TRACE(true);
     ifstream inputFile(CACHE_FILE_NAME);
     fileOpenCheck(inputFile, CACHE_FILE_NAME);
     int startOffset = cache_partition_offsets[runId][0]; // Replace with your desired starting offset
@@ -75,7 +74,6 @@ queue<RecordStructure> Cache::loadDataForRun(int runId)
 
 int Cache::read(int partition)
 {
-    TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
 
     cout<<"max records to consume "<<records_to_consume<<endl;
