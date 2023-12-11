@@ -47,7 +47,7 @@ Source Files: test_scripts.cpp test_scripts.h
 Lines: 51-81
 
 ## Justification of the choice of above techniques:
-1. Quicksort - Quick sort is vital in internal sorting due to its efficient average-case time complexity, making it exceptionally fast for large datasets. Its divide-and-conquer strategy with low memory usage ensures swift sorting, often outperforming other algorithms like merge sort or insertion sort.
+1. Quicksort - Quick sort is vital in internal sorting due to its efficient average-case time complexity, making it exceptionally fast for large datasets. Its divide-and-conquer strategy with low memory usage ensures swift sorting, often outperforming other algorithms like merge sort or insertion sort. It suits best in this particular case where we have a uniform random distribution.
 
 2. Tournament Trees - In external sorting, tournament trees serve as efficient structures to handle merging of sorted chunks from disk, reducing comparisons and improving the merge step's efficiency. They optimize the selection of the next smallest or largest element when merging sorted chunks from external memory, minimizing I/O operations and enhancing overall sorting performance.
 
