@@ -31,7 +31,7 @@ Iterator *SortPlan::init() const
 } // SortPlan::init
 
 SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(plan->_input->init()),
-														 _consumed(0), _produced(0), _recsize(1004)
+														 _consumed(0), _produced(0), _recsize(54)
 {
 	TRACE(true);
 	traceprintf("Starting to sort.\n");
@@ -39,6 +39,7 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	// TODO: hard coding and commenting records generation
 	while (_input->next())
 		++_consumed;
+	// _consumed = 200000;
 	delete _input;
 
 	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
@@ -76,7 +77,7 @@ bool SortIterator::next()
 	// 	return false;
 
 	ssdSort();
-	externalMerge();
+	if(runs>1) externalMerge();
 	
 	return false;
 } // SortIterator::next

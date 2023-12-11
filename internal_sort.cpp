@@ -26,7 +26,7 @@ std::vector<RecordStructure> read_ramfile()
     }
     input_file.seekg(0, ios::end);
     streampos end = input_file.tellg();
-    //cout<<"ram file size "<<end/1004<<endl;
+    
     input_file.seekg(0, ios::beg);
     // Read data from the file and store it in a vector of RecordStructure
     std::vector<RecordStructure> arr;

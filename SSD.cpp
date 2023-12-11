@@ -75,9 +75,7 @@ void SSD::clearSSD()
 
 SSD::SSD()
 {
-    fileName = SSD_FILE_NAME;
-    nextHierFileName = HDD_OUT_FILE_NAME;
-    sizeInBytes = SSD_SIZE_IN_BYTES;
+    
 }
 
 //constructor for ssd sort
@@ -86,7 +84,10 @@ SSD::SSD(int NWAY) : _NWAY(NWAY)
     readOffsets = new streamoff[NWAY];
     records_in_partition = new uint32_t[NWAY];
     // initializing offsets for ssd
-    streamoff partition_size = 100*RoundDown(DRAM_SIZE_IN_BYTES, recordsize); //assuming max partitions for int sort is 100
+    //TODO: move to defs.h
+    uint partitions = (0.999*SSD_SIZE_IN_BYTES) / RoundDown(DRAM_SIZE_IN_BYTES, recordsize);
+
+    streamoff partition_size = partitions*RoundDown(DRAM_SIZE_IN_BYTES, recordsize); //assuming max partitions for int sort is 100
     uint32_t max_records = partition_size / recordsize;
 
     //leave out some space for output buffer in SSD 
@@ -112,6 +113,6 @@ SSD::SSD(int NWAY) : _NWAY(NWAY)
 
 SSD::~SSD()
 {
-    delete readOffsets;
-    delete records_in_partition;
+    // delete readOffsets;
+    // delete records_in_partition;
 }

@@ -8,8 +8,6 @@
 
 using namespace std;
 
-#define HDD_PAGE_SIZE 1024
-
 SSDSortPlan::SSDSortPlan(RowCount produced, RowCount consumed) : _produced(produced), _consumed(consumed)
 {
 	TRACE(true);
@@ -49,13 +47,14 @@ bool SSDSortIterator::next()
 		return false;
 	internalSort();
 	externalMerge();
+	batches = 0;
 	return true;
 } // SortIterator::next
 
 uint getMaxSSDBatches()
 {
-	uint partitions = (SSD_SIZE_IN_BYTES) / (DRAM_SIZE_IN_BYTES);
-	return (uint)(0.99 * partitions);
+	uint partitions = (0.999*SSD_SIZE_IN_BYTES) / RoundDown(DRAM_SIZE_IN_BYTES, recordsize);
+	return partitions;
 }
 
 bool SSDSortIterator::internalSort()
@@ -131,6 +130,9 @@ int SSDSortIterator::externalMerge()
 
 	externalSort(ssd, &dram_merge, cache_merge, batches);
 
+	//clear memory for next batch 
+	SSD ssd_temp;
+	ssd_temp.clearSSD();
 	cache_merge.clearCache();
     dram_merge.clearRam();
 	return 0;

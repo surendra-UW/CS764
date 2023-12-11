@@ -544,7 +544,7 @@ void TournamentTree::writeSortedRecordToFile(RecordStructure rs)
     */
     if (isFileFull(DRAM_OUT_FILE_NAME, RoundDown(16 * 1024, recordsize)))
     {
-        if (isFileFull(SSD_OUT_FILE_NAME, RoundDown(8*1024 * 1024, recordsize)))
+        if (isFileFull(SSD_OUT_FILE_NAME, RoundDown(4*1024 * 1024, recordsize)))
         {
             appendDataToDestination(SSD_OUT_FILE_NAME, HDD_OUT_FILE_NAME);
             TRACE(true);

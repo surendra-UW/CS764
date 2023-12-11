@@ -52,11 +52,10 @@ bool ScanIterator::next()
     std::uniform_int_distribution<unsigned short>charDistribution(0,9);
 
     // Generate random values for the structure members for each record
-    for (int k = 0; k < _plan->_count; ++k) {
         RecordStructure rs;
 
         // strict 3 columns
-        int columnLength = 1000 / 3;
+        int columnLength = 50 / 3;
 
         // Populate the first three columns with strings of equal length
         for (int i = 0; i < 3; ++i) {
@@ -66,7 +65,7 @@ bool ScanIterator::next()
         }
 
         // Any extra bytes spill over to the fourth column
-        for (int j = 0; j < 1000 % 3; ++j) {
+        for (int j = 0; j < 50 % 3; ++j) {
             rs.members[3] += static_cast<char>('0' + charDistribution(gen));
         }
 
@@ -80,9 +79,8 @@ bool ScanIterator::next()
         outputFile << rs.members[0] << "," << rs.members[1] << "," << rs.members[2] << "," << rs.members[3] << "\n";
 
         outputFile.close();
-    }
 	
-	printf("Struct %d appended to file.", _count);
+	// printf("Struct %d appended to file.", _count);
 	++_count;
 	return true;
 } // ScanIterator::next
