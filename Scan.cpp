@@ -55,7 +55,7 @@ bool ScanIterator::next()
         RecordStructure rs;
 
         // strict 3 columns
-        int columnLength = 50 / 3;
+        int columnLength = inputrecordsize / 3;
 
         // Populate the first three columns with strings of equal length
         for (int i = 0; i < 3; ++i) {
@@ -65,7 +65,7 @@ bool ScanIterator::next()
         }
 
         // Any extra bytes spill over to the fourth column
-        for (int j = 0; j < 50 % 3; ++j) {
+        for (int j = 0; j < inputrecordsize % 3; ++j) {
             rs.members[3] += static_cast<char>('0' + charDistribution(gen));
         }
 
@@ -75,9 +75,12 @@ bool ScanIterator::next()
             std::cerr << "Error opening file for appending." << std::endl;
             return 1;
         }
-
-        outputFile << rs.members[0] << "," << rs.members[1] << "," << rs.members[2] << "," << rs.members[3] << "\n";
-
+        // outputFile << rs.members[0] << "," << rs.members[1] << "," << rs.members[2] << "," << rs.members[3] << "\n";
+        outputFile << rs.members[0] << "," << rs.members[1] << "," << rs.members[2];
+        if(!rs.members[3].empty()){
+            outputFile << "," << rs.members[3];
+        }
+        outputFile << "\n";
         outputFile.close();
 	
 	// printf("Struct %d appended to file.", _count);

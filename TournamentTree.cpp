@@ -21,6 +21,7 @@ TournamentTree::TournamentTree(TournamentTreeNode a[], int size, SSD *ssd, DRAM 
     this->cache = cache;
     this->dram = dram;
     this->ssd = ssd;
+    this->fieldLength = (inputrecordsize)/3;
 }
 
 TournamentTreeNode *TournamentTree::getTree()
@@ -51,8 +52,8 @@ void TournamentTree::printTreeOfLosers()
 }
 // new function
 void TournamentTree::computeOffsetUtil(int nodeIndex, int offset){
-    tournamentTree[nodeIndex].offsetValueCode = (FIELD_LENGTH - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
-    if(offset < FIELD_LENGTH){
+    tournamentTree[nodeIndex].offsetValueCode = (fieldLength - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
+    if(offset < fieldLength){
         tournamentTree[nodeIndex].offsetValueCode += offset * OVC_MULTIPLICATION_FACTOR_2;
         tournamentTree[nodeIndex].offsetValueCode += (int)tournamentTree[nodeIndex].element.members[0][offset] - 48;
     }
@@ -64,8 +65,8 @@ void TournamentTree::computeOffsetForLoser(int loserIndex, int winnerIndex)
     fullComparison(loserIndex, winnerIndex, offset);
     computeOffsetUtil(loserIndex, offset);
 /*
-    tournamentTree[loserIndex].offsetValueCode = (FIELD_LENGTH - offset) * 100;//DOMAIN_OF_VALUES;
-    if(offset < FIELD_LENGTH){
+    tournamentTree[loserIndex].offsetValueCode = (fieldLength - offset) * 100;//DOMAIN_OF_VALUES;
+    if(offset < fieldLength){
         tournamentTree[loserIndex].offsetValueCode += offset * 10;
         tournamentTree[loserIndex].offsetValueCode += (int)tournamentTree[loserIndex].element.members[0][offset] - 48;
     }
@@ -78,8 +79,8 @@ void TournamentTree::computeOffsetForLoser(TournamentTreeNode &loser, Tournament
     int offset = 0;
     fullComparison(loser, winner, offset);
 
-    // loser.offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
-    // if(offset < FIELD_LENGTH){
+    // loser.offsetValueCode = (fieldLength - offset) * DOMAIN_OF_VALUES;
+    // if(offset < fieldLength){
     //     loser.offsetValueCode += (int)loser.element.members[0][offset];
     // }
 
@@ -98,8 +99,8 @@ void TournamentTree::computeOffsetForLoser(TournamentTreeNode &loser, Tournament
        1000 0
           1 0
 */
-    loser.offsetValueCode = (FIELD_LENGTH - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
-    if(offset < FIELD_LENGTH){
+    loser.offsetValueCode = (fieldLength - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
+    if(offset < fieldLength){
         loser.offsetValueCode += offset * OVC_MULTIPLICATION_FACTOR_2;
         loser.offsetValueCode += (int)loser.element.members[0][offset] - 48;
     }
@@ -110,20 +111,20 @@ void TournamentTree::computeOffsetForLoser(TournamentTreeNode &loser, Tournament
 void TournamentTree::computeOffsetValueCode(int node_index)
 {
     int offset = 0;
-    while(offset < FIELD_LENGTH){
+    while(offset < fieldLength){
         if(tournamentTree[node_index].element.members[0][offset] != '0')
             break;
         offset++;
     }
     //cout<<"Offset of node "<<node_index<<"\t = "<<offset<<endl;
-    tournamentTree[node_index].offsetValueCode = (FIELD_LENGTH - offset) * OVC_MULTIPLICATION_FACTOR_1;
-    if(offset < FIELD_LENGTH) {
+    tournamentTree[node_index].offsetValueCode = (fieldLength - offset) * OVC_MULTIPLICATION_FACTOR_1;
+    if(offset < fieldLength) {
         tournamentTree[node_index].offsetValueCode += offset * OVC_MULTIPLICATION_FACTOR_2;
         tournamentTree[node_index].offsetValueCode += (int)tournamentTree[node_index].element.members[0][offset] - 48;
     }
 /*
-    tournamentTree[node_index].offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
-    if(offset < FIELD_LENGTH) {
+    tournamentTree[node_index].offsetValueCode = (fieldLength - offset) * DOMAIN_OF_VALUES;
+    if(offset < fieldLength) {
         tournamentTree[node_index].offsetValueCode += (int)tournamentTree[node_index].element.members[0][offset];
     }
     */
@@ -158,7 +159,7 @@ void TournamentTree::compareNodeValues(int left, int right)
 
 void TournamentTree::fullComparison(TournamentTreeNode &left, TournamentTreeNode &right, int& offset)
 {
-    while (offset < FIELD_LENGTH && left.element.members[0][offset] == right.element.members[0][offset])
+    while (offset < fieldLength && left.element.members[0][offset] == right.element.members[0][offset])
     {
         offset++;
     }
@@ -166,7 +167,7 @@ void TournamentTree::fullComparison(TournamentTreeNode &left, TournamentTreeNode
 
 void TournamentTree::fullComparison(int left, int right, int& offset)
 {
-    while (offset < FIELD_LENGTH && tournamentTree[left].element.members[0][offset] == tournamentTree[right].element.members[0][offset])
+    while (offset < fieldLength && tournamentTree[left].element.members[0][offset] == tournamentTree[right].element.members[0][offset])
     {
         offset++;
     }
@@ -185,7 +186,7 @@ bool TournamentTree::isLeftLesserThanRight(TournamentTreeNode &left, TournamentT
             // TRACE(true);
             fullComparison(left, right, offset);
             computeNewOffsetValueCode = true;
-            return offset < FIELD_LENGTH && ((int)left.element.members[0][offset] < (int)right.element.members[0][offset]);
+            return offset < fieldLength && ((int)left.element.members[0][offset] < (int)right.element.members[0][offset]);
         }
         else
         {
@@ -198,28 +199,28 @@ bool TournamentTree::isLeftLesserThanRight(TournamentTreeNode &left, TournamentT
         int offset = 0;
         fullComparison(left, right, offset); // TODO: Is this redundant ? No, if any node doesnt have OVC computed, it needs to undergo a full string comparison
         computeNewOffsetValueCode = false;
-        bool ans = offset < FIELD_LENGTH && ((int)left.element.members[0][offset] < (int)right.element.members[0][offset]);
+        bool ans = offset < fieldLength && ((int)left.element.members[0][offset] < (int)right.element.members[0][offset]);
         if(ans){
             // computeOffsetForLoser(right, left);
-            right.offsetValueCode = (FIELD_LENGTH - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
-            if(offset < FIELD_LENGTH){
+            right.offsetValueCode = (fieldLength - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
+            if(offset < fieldLength){
                 right.offsetValueCode += offset * OVC_MULTIPLICATION_FACTOR_2;
                 right.offsetValueCode += (int)right.element.members[0][offset] - 48;
             }        
 
 /*
-            right.offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
-            if(offset < FIELD_LENGTH){
+            right.offsetValueCode = (fieldLength - offset) * DOMAIN_OF_VALUES;
+            if(offset < fieldLength){
                 right.offsetValueCode += (int)right.element.members[0][offset];
             }*/
         } else {
             // computeOffsetForLoser(left, right);
-            /*left.offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
-            if(offset < FIELD_LENGTH){
+            /*left.offsetValueCode = (fieldLength - offset) * DOMAIN_OF_VALUES;
+            if(offset < fieldLength){
                 left.offsetValueCode += (int)left.element.members[0][offset];
             }*/
-            left.offsetValueCode = (FIELD_LENGTH - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
-            if(offset < FIELD_LENGTH){
+            left.offsetValueCode = (fieldLength - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
+            if(offset < fieldLength){
                 left.offsetValueCode += offset * OVC_MULTIPLICATION_FACTOR_2;
                 left.offsetValueCode += (int)left.element.members[0][offset] - 48;
             }  
@@ -255,7 +256,7 @@ bool TournamentTree::isLeftLesserThanRight(int left, int right, bool &computeNew
             fullComparison(left, right, offset);
             // cout<<"Between index left = "<<left<<" and right = "<<right<<" offset = "<<offset<<endl;
             computeNewOffsetValueCode = true;
-            return offset < FIELD_LENGTH && (tournamentTree[left].element.members[0][offset] < tournamentTree[right].element.members[0][offset]);
+            return offset < fieldLength && (tournamentTree[left].element.members[0][offset] < tournamentTree[right].element.members[0][offset]);
         }
         else
         {
@@ -270,30 +271,30 @@ bool TournamentTree::isLeftLesserThanRight(int left, int right, bool &computeNew
         int offset = 0;
         fullComparison(left, right, offset); // TODO: Is this redundant ? No, if any node doesnt have OVC computed, it needs to undergo a full string comparison
         computeNewOffsetValueCode = false;
-        bool ans = offset < FIELD_LENGTH && ((int)tournamentTree[left].element.members[0][offset] < (int)tournamentTree[right].element.members[0][offset]);
+        bool ans = offset < fieldLength && ((int)tournamentTree[left].element.members[0][offset] < (int)tournamentTree[right].element.members[0][offset]);
         if(ans){
             // computeOffsetForLoser(right, left);
             /*
-            tournamentTree[right].offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
-            if(offset < FIELD_LENGTH){
+            tournamentTree[right].offsetValueCode = (fieldLength - offset) * DOMAIN_OF_VALUES;
+            if(offset < fieldLength){
                 tournamentTree[right].offsetValueCode += (int)tournamentTree[right].element.members[0][offset];
             }
             */
-            tournamentTree[right].offsetValueCode = (FIELD_LENGTH - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
-            if(offset < FIELD_LENGTH){
+            tournamentTree[right].offsetValueCode = (fieldLength - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
+            if(offset < fieldLength){
                 tournamentTree[right].offsetValueCode += offset * OVC_MULTIPLICATION_FACTOR_2;
                 tournamentTree[right].offsetValueCode += (int)tournamentTree[right].element.members[0][offset] - 48;
             }  
         } else {
             // computeOffsetForLoser(left, right);
             /*
-            tournamentTree[left].offsetValueCode = (FIELD_LENGTH - offset) * DOMAIN_OF_VALUES;
-            if(offset < FIELD_LENGTH){
+            tournamentTree[left].offsetValueCode = (fieldLength - offset) * DOMAIN_OF_VALUES;
+            if(offset < fieldLength){
                 tournamentTree[left].offsetValueCode += (int)tournamentTree[left].element.members[0][offset];
             }
             */
-           tournamentTree[left].offsetValueCode = (FIELD_LENGTH - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
-            if(offset < FIELD_LENGTH){
+           tournamentTree[left].offsetValueCode = (fieldLength - offset) * OVC_MULTIPLICATION_FACTOR_1;//DOMAIN_OF_VALUES;
+            if(offset < fieldLength){
                 tournamentTree[left].offsetValueCode += offset * OVC_MULTIPLICATION_FACTOR_2;
                 tournamentTree[left].offsetValueCode += (int)tournamentTree[left].element.members[0][offset] - 48;
             }
@@ -424,12 +425,12 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
                 // All the data in this run has been read.
                 // Pass late fence - NULL vector/ empty vector for termination of the run
                 if(ssd == nullptr) {
-                    cout<<"cannot pull from ssd "<<endl;
+                    // cout<<"cannot pull from ssd "<<endl;
                     return pushLateFence(in, k, run_id);
                 }
 
                 int records_loaded_into_ssd = ssd->read(run_id);
-                cout<<" Read data log to ssd: "<<records_loaded_into_ssd<<endl;
+                // cout<<" Read data log to ssd: "<<records_loaded_into_ssd<<endl;
                 if(records_loaded_into_ssd == -1) {
                     return pushLateFence(in, k, run_id);
                 }
@@ -437,14 +438,14 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
                 dram->setRecordsInPartition(run_id, records_loaded_into_ssd);
                 records_loaded_into_dram = dram->read(run_id);
             }
-            cout<<" Read data log 3\n";
+            // cout<<" Read data log 3\n";
             cache.setRecordsInPartition(run_id, records_loaded_into_dram);
             cache.resetReadOffset(run_id);
             cache.read(run_id); // refilling the cache from DRAM since it failed earlier
         }
         in[run_id] = cache.loadDataForRun(run_id);
-        cout<<"loading new batch for run "<<run_id<<" queue size "<<in[run_id].size()<<endl;
-        cout<<" Read data log 4\n";
+        // cout<<"loading new batch for run "<<run_id<<" queue size "<<in[run_id].size()<<endl;
+        // cout<<" Read data log 4\n";
 
         if(in[run_id].size() == 0){
             RecordStructure lateFence = {LATE_FENCE_VALUE, LATE_FENCE_VALUE, LATE_FENCE_VALUE, "9"}; 
@@ -452,12 +453,12 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
             tournamentTree[k + run_id].element = in[run_id].front();
             tournamentTree[k + run_id].runId = run_id;
             in[run_id].pop();
-            cout<<"Pushed late fence for run "<<run_id<<endl;
+            // cout<<"Pushed late fence for run "<<run_id<<endl;
         } else {
             tournamentTree[k + run_id].element = in[run_id].front();
             tournamentTree[k + run_id].runId = run_id;
             in[run_id].pop();
-            cout<<"queue size of partition: "<< run_id<<" :"<<in[run_id].size()<<endl;
+            // cout<<"queue size of partition: "<< run_id<<" :"<<in[run_id].size()<<endl;
         }
 
     }
@@ -496,7 +497,7 @@ void appendDataToDestination(string sourceFilePath, string destinationFilePath)
 	}
 	else
 	{
-		cout << "cannot open files to evict output data" << endl;
+		traceprintf("cannot open files to evict output data\n");
 	}
 }
 
@@ -568,11 +569,16 @@ void TournamentTree::writeSortedRecordToFile(RecordStructure rs)
         truncateFile(DRAM_OUT_FILE_NAME);
     }
     FILE *file = fopen(DRAM_OUT_FILE_NAME.c_str(), "a");
-    fprintf(file, "%s,%s,%s,%s\n", rs.members[0].c_str(), rs.members[1].c_str(), rs.members[2].c_str(), rs.members[3].c_str());
+    
+    fprintf(file, "%s,%s,%s", rs.members[0].c_str(), rs.members[1].c_str(), rs.members[2].c_str());
+    if(!rs.members[3].empty()){
+        fprintf(file, ",%s", rs.members[3].c_str());
+    }
+    fprintf(file, "\n");
     
     //cout<<"\nValue written to DRAM is "<<rs.members[0]<< endl;
     		// TRACE(true);
-	    traceprintf("Value written to DRAM is: %s\n", rs.members[0].c_str());
+    traceprintf("Value written to DRAM is: %s\n", rs.members[0].c_str());
     fclose(file);
 }
 

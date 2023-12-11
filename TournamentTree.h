@@ -21,6 +21,7 @@ class TournamentTree
     DRAM *dram;
     SSD *ssd;
     int full_string_comparisons_avoided = 0;
+    int fieldLength;
 
 public:
     int left(int i);

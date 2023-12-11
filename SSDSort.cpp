@@ -39,6 +39,24 @@ SSDSortIterator::~SSDSortIterator()
 				(unsigned long)(_consumed));
 } // SortIterator::~SortIterator
 
+void appendDataAndTruncate(string sourceFilePath, string destinationFilePath)
+{
+    ifstream inputFile(sourceFilePath);
+	ofstream outputFile(destinationFilePath, ios::app);
+	if (inputFile.is_open() && outputFile.is_open())
+	{
+		outputFile << inputFile.rdbuf();
+		inputFile.close();
+		outputFile.close();
+	}
+	else
+	{
+		traceprintf("cannot open files to evict output data\n");
+	}
+	ofstream clearFile(sourceFilePath, ofstream::trunc);
+    clearFile.close();
+}
+
 // external sort
 bool SSDSortIterator::next()
 {
@@ -46,7 +64,12 @@ bool SSDSortIterator::next()
 	if (_produced >= _plan->_consumed)
 		return false;
 	internalSort();
-	externalMerge();
+	if(batches > 1)
+		externalMerge();
+	else {
+		// move SSD.txt to HDD_out.TXT
+		appendDataAndTruncate(SSD_FILE_NAME, HDD_OUT_FILE_NAME);
+	}
 	batches = 0;
 	return true;
 } // SortIterator::next
@@ -63,16 +86,16 @@ bool SSDSortIterator::internalSort()
 	DRAM dram(hddOffset);
 	uint max_batches = getMaxSSDBatches();
 
-	cout<<"_produced "<<_produced<<"_consumed "<<_consumed<<"batches "<<batches<<" max_batches "<<max_batches<<endl;
+	// cout<<"_produced "<<_produced<<"_consumed "<<_consumed<<"batches "<<batches<<" max_batches "<<max_batches<<endl;
 	while ((_produced < _plan->_consumed) && (batches < max_batches))
 	{
 		std::vector<RecordStructure> arr;
 		uint dramRecords = divide(RoundDown(DRAM_SIZE_IN_BYTES, recordsize), (size_t)recordsize);
 		uint recordsToConsume = (_consumed - _produced) > dramRecords ? dramRecords : (_consumed - _produced);
 
-		cout << "dram records " << dramRecords << "rec to consusc " << recordsToConsume << endl;
+		// cout << "dram records " << dramRecords << "rec to consusc " << recordsToConsume << endl;
 		dram.loadFromHDD(recordsToConsume);
-		cout << "loading ram with rec " << recordsToConsume << endl;
+		// cout << "loading ram with rec " << recordsToConsume << endl;
 
 		arr = read_ramfile();
 		quickSort(arr, customComparator);
@@ -85,7 +108,7 @@ bool SSDSortIterator::internalSort()
 		dram.clearRam();
 
 		batches++;
-		cout << "current bacth " << batches << endl;
+		// cout << "current batch " << batches << endl;
 	}
 	return true;
 }

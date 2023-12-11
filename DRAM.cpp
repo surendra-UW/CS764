@@ -20,7 +20,7 @@ void fileOpenCheck(StreamType &file, string fileName)
 int DRAM::read(int partition)
 {
     uint32_t records_to_consume = max_partition_size / recordsize;
-    cout<<"loading into dram: "<<partition<<endl;
+    // cout<<"loading into dram: "<<partition<<endl;
     // check the records count left in SSD in this partition
     if (records_in_partition[partition] == 0)
         return -1; // indicating end of partition
@@ -33,8 +33,8 @@ int DRAM::read(int partition)
     uint32_t block_size = records_to_consume*recordsize;
     uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES / _NWAY, recordsize);
 
-    cout<<"dram block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
-    cout<<"seek offsets: dram "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
+    // cout<<"dram block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
+    // cout<<"seek offsets: dram "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
 
     ifstream inputFile(SSD_FILE_NAME);
     fstream dramFile(DRAM_FILE_NAME, ios::in | ios::out);
@@ -58,7 +58,7 @@ int DRAM::read(int partition)
     delete[] readBuffer;
   
     readOffsets[partition] = inputFile.tellg();
-    cout<<"ssd end point is "<<readOffsets[partition]<<endl;
+    // cout<<"ssd end point is "<<readOffsets[partition]<<endl;
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
     dramFile.close();
     inputFile.close();
@@ -89,7 +89,7 @@ DRAM::DRAM(int NWAY) : _NWAY(NWAY)
     uint32_t max_records = partition_size / recordsize;
     max_partition_size = RoundDown(DRAM_SIZE_IN_BYTES / NWAY, recordsize);
     TRACE(true);
-    cout << "Max partition size of DRAM = " << max_partition_size << endl;
+    // cout << "Max partition size of DRAM = " << max_partition_size << endl;
 
     for (int i = 0; i < NWAY; i++)
     {
@@ -121,7 +121,7 @@ DRAM::DRAM(int NWAY, bool is_external_sort) : _NWAY(NWAY)
     partition_size = RoundDown((0.999*SSD_SIZE_IN_BYTES) / NWAY, recordsize); 
     uint32_t max_records = partition_size / recordsize;
     max_partition_size = RoundDown(DRAM_SIZE_IN_BYTES / NWAY, recordsize);
-    cout << "Max partition size of DRAM = " << max_partition_size << endl;
+    // cout << "Max partition size of DRAM = " << max_partition_size << endl;
 
     for (int i = 0; i < NWAY; i++)
     {
@@ -165,7 +165,7 @@ void DRAM::loadFromHDD(uint recordsToConsume)
     }
 
     hddSortOffset = HDDFile.tellg();
-    cout<<"Dram Hdd offset is "<<hddSortOffset<<endl;
+    // cout<<"Dram Hdd offset is "<<hddSortOffset<<endl;
     HDDFile.close();
     DRAMFile.close();
 }

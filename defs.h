@@ -153,3 +153,6 @@ int msbi(size_t const x);
 char const *YesNo(bool const b);
 char const *OkBad(bool const b);
 extern int recordsize;
+extern int totalRecordCount;
+extern int inputrecordsize;
+extern char* ovalue;

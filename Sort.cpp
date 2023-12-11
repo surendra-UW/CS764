@@ -36,23 +36,22 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	TRACE(true);
 	traceprintf("Starting to sort.\n");
 
-	// TODO: hard coding and commenting records generation
-	// while (_input->next())
-	// 	++_consumed;
-	_consumed = 3000000;
+	while (_input->next())
+		++_consumed;
+	// _consumed = 3000000;
 	delete _input;
-
-	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
-	// if (!inputFile)
-	// {
-	// 	cout << "cannot open the hard disk" << endl;
-	// 	exit(1);
-	// }
-	// streampos curr = inputFile.tellg();
-	// _recsize = curr/_consumed;
-	// inputFile.close();
+	
+	ifstream inputFile("HDD.txt", ios::binary | ios::ate);
+	if (!inputFile)
+	{
+		// cout << "cannot open the hard disk" << endl;
+		exit(1);
+	}
+	streampos curr = inputFile.tellg();
+	_recsize = curr/_consumed;
+	inputFile.close();
 	recordsize = _recsize;
-	cout<<"record size: "<<recordsize<<endl;
+	// cout<<"record size: "<<recordsize<<endl;
 	// initialize
 	runs = 0;
 

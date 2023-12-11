@@ -21,7 +21,7 @@ int SSD::read(int partition)
 {
     TRACE(true);
     uint32_t records_to_consume = max_partition_size / recordsize;
-    cout<<"loading into ssd: "<<partition<<endl;
+    // cout<<"loading into ssd: "<<partition<<endl;
     // check the records count left in SSD in this partition
     if (records_in_partition[partition] == 0)
         return -1; // indicating end of partition
@@ -35,8 +35,8 @@ int SSD::read(int partition)
     //partition size to be used in SSD for merge step 
     uint partition_size = RoundDown(0.999*SSD_SIZE_IN_BYTES / _NWAY, recordsize);
 
-    cout<<"ssd block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
-    cout<<"seek offsets: ssd "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
+    // cout<<"ssd block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
+    // cout<<"seek offsets: ssd "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
 
     ifstream inputFile(HDD_OUT_FILE_NAME);
     fstream ssdFile(SSD_FILE_NAME, ios::in | ios::out);
@@ -60,7 +60,7 @@ int SSD::read(int partition)
     delete[] readBuffer;
   
     readOffsets[partition] = inputFile.tellg();
-    cout<<"ssd end point is "<<readOffsets[partition]<<endl;
+    // cout<<"ssd end point is "<<readOffsets[partition]<<endl;
     records_in_partition[partition] = records_in_partition[partition] - records_to_consume;
     ssdFile.close();
     inputFile.close();
@@ -93,7 +93,7 @@ SSD::SSD(int NWAY) : _NWAY(NWAY)
     //leave out some space for output buffer in SSD 
     max_partition_size = RoundDown((0.999*SSD_SIZE_IN_BYTES) / NWAY, recordsize);
     TRACE(true);
-    cout << "Max partition size of SSD = " << max_partition_size << endl;
+    // cout << "Max partition size of SSD = " << max_partition_size << endl;
 
     for (int i = 0; i < NWAY; i++)
     {

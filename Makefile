@@ -25,8 +25,10 @@ MSG=no message
 
 # default target
 #
-Test.exe : Makefile $(OBJS)
-	g++ $(CPPFLAGS) -o Test.exe $(OBJS)
+all: sort
+ 
+sort : Makefile $(OBJS)
+	g++ $(CPPFLAGS) -o sort $(OBJS)
 
 trace : Test.exe Makefile
 	@date > trace

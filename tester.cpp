@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include "defs.h"
 
 using namespace std;
 
@@ -18,7 +19,7 @@ int main () {
 	}
 	else
 	{
-		cout << "cannot open files to evict output data" << endl;
+		traceprintf("cannot open files to evict output data\n");
 	}
 
     ofstream clearFile("./out/SSD_OUT.txt", ofstream::trunc);
