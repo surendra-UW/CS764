@@ -76,6 +76,6 @@ bool verifySortOrder(char *outputFile) {
 
 int main(){
     // verifySets("./in/HDD.txt","out/HDD_OUT.txt");
-    verifySortOrder("./out/HDD_OUT.txt");
+    verifySortOrder("./out/HDD_OUT2.txt");
     return 0;
 }

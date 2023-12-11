@@ -435,7 +435,7 @@ void TournamentTree::readNextValueFromRunUtil(vector< queue<RecordStructure> > &
                 }
                 dram->resetReadOffset(run_id);
                 dram->setRecordsInPartition(run_id, records_loaded_into_ssd);
-                dram->read(run_id);
+                records_loaded_into_dram = dram->read(run_id);
             }
             cout<<" Read data log 3\n";
             cache.setRecordsInPartition(run_id, records_loaded_into_dram);

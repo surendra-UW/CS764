@@ -76,10 +76,9 @@ bool SortIterator::next()
 	// if (_produced >= _consumed)
 	// 	return false;
 
-	// ssdSort();
-	// if(runs>1) 
-	runs = 2;
-	externalMerge();
+	ssdSort();
+
+	if(runs>1) externalMerge();
 	
 	return false;
 } // SortIterator::next
