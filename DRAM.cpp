@@ -33,6 +33,7 @@ int DRAM::read(int partition)
     uint32_t block_size = records_to_consume*recordsize;
     uint partition_size = RoundDown(DRAM_SIZE_IN_BYTES / _NWAY, recordsize);
 
+    traceprintf("loading %d records into dram from ssd\n", records_to_consume);
     // cout<<"dram block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
     // cout<<"seek offsets: dram "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
 
@@ -155,6 +156,7 @@ void DRAM::loadFromHDD(uint recordsToConsume)
     fileOpenCheck(DRAMFile, DRAM_FILE_NAME);
     const int blockSize = 1 << 20;
     char readBuffer[blockSize];
+
     uint32_t block_left = recordsToConsume * recordsize;
     while (block_left > 0 && !HDDFile.eof())
     {

@@ -95,6 +95,8 @@ int Cache::read(int partition)
         // so basically read from partition_size * partition to partition_size * partition + max_partition_size
         // max_partition_size = records_to_consume * recordsize;
     }
+
+    traceprintf("loading %d records into cache from dram into partition\n", records_to_consume, partition);
     uint32_t block_size = records_to_consume*recordsize;
     uint partition_size = RoundDown(CACHE_SIZE_IN_BYTES / _NWAY, recordsize);
 

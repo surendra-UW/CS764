@@ -87,6 +87,7 @@ bool SSDSortIterator::internalSort()
 	DRAM dram(hddOffset);
 	uint max_batches = getMaxSSDBatches();
 
+	traceprintf("sorting DRAM size runs internally\n");
 	// cout<<"_produced "<<_produced<<"_consumed "<<_consumed<<"batches "<<batches<<" max_batches "<<max_batches<<endl;
 	while ((_produced < _plan->_consumed) && (batches < max_batches))
 	{
@@ -97,12 +98,14 @@ bool SSDSortIterator::internalSort()
 		// cout << "dram records " << dramRecords << "rec to consusc " << recordsToConsume << endl;
 		dram.loadFromHDD(recordsToConsume);
 		// cout << "loading ram with rec " << recordsToConsume << endl;
+		traceprintf("start sorting dram batch %d\n", batches+1);
 
 		arr = read_ramfile();
 		quickSort(arr, customComparator);
 		write_ramfile(arr);
 		arr.clear(); // Remove all elements
 
+		traceprintf("end sorting dram batch %d with records in batch \n", batches+1, recordsToConsume);
 		_produced = _produced + recordsToConsume;
 		if (!copyRamToHDD())
 			exit(1);
@@ -136,6 +139,7 @@ bool SSDSortIterator::copyRamToHDD()
 int SSDSortIterator::externalMerge()
 {
 	TRACE(true);
+	traceprintf("start merging dram size runs of %d to ssd \n", batches);
 
 	SSD *ssd = NULL;
 	//load dram all partitions
@@ -159,5 +163,8 @@ int SSDSortIterator::externalMerge()
 	ssd_temp.clearSSD();
 	cache_merge.clearCache();
     dram_merge.clearRam();
+
+	traceprintf("end merging dram size runs of %d to ssd \n", batches);
+	traceprintf("written output to file %s\n", HDD_OUT_FILE_NAME);
 	return 0;
 }

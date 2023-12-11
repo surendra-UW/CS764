@@ -32,6 +32,8 @@ int SSD::read(int partition)
         records_to_consume = records_in_partition[partition];
     }
     uint64_t block_size = records_to_consume*recordsize;
+
+    traceprintf("loading %d records into ssd from hdd\n", records_to_consume);
     //partition size to be used in SSD for merge step 
     uint partition_size = RoundDown(0.999*SSD_SIZE_IN_BYTES / _NWAY, recordsize);
 

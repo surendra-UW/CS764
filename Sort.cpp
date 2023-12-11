@@ -85,9 +85,14 @@ bool SortIterator::next()
 
 void SortIterator:: ssdSort() {
 	TRACE(true);
+
+	traceprintf("creating ssd size runs \n");
 	Plan const *ssd_plan = new SSDSortPlan(_produced, _consumed);
 	Iterator *ssd_sort_iterator = ssd_plan->init();
-	while (ssd_sort_iterator->next()) runs++;
+	while (ssd_sort_iterator->next()) {
+		runs++;
+		traceprintf("end creating ssd size run of %d\n", runs);
+	}
 }
 
 void SortIterator:: clearTempFile() {
@@ -105,13 +110,14 @@ void SortIterator:: clearTempFile() {
 void SortIterator:: externalMerge() {
 	TRACE(true);
 
+	traceprintf("start merging %d ssd sized runs\n", runs);
 	//load SSD all partitions 
 	SSD ssd_merge(runs);
 	for (int i = 0; i < runs; i++)
 	{
 		ssd_merge.read(i);
 	}
-
+	traceprintf("SSD is loaded with records for external merge.\n");
 	//load dram all partitions
 	DRAM dram_merge(runs, true);
 	for (int i = 0; i < runs; i++)
@@ -119,7 +125,7 @@ void SortIterator:: externalMerge() {
 		dram_merge.read(i);
 	}
 		// TRACE(true);
-	    traceprintf("DRAM is loaded with records for external merge.\n");
+	traceprintf("DRAM is loaded with records for external merge.\n");
 
 	//load cache all partitions
 	Cache cache_merge(runs);
@@ -127,6 +133,7 @@ void SortIterator:: externalMerge() {
 	{
 		cache_merge.read(i);
 	}
+	traceprintf("Cache is loaded with records for external merge.\n");
 
 	externalSort(&ssd_merge, &dram_merge, cache_merge, runs);
 
@@ -135,4 +142,6 @@ void SortIterator:: externalMerge() {
     dram_merge.clearRam();
 	
 	clearTempFile();
+	
+	traceprintf("start merging %d ssd sized runs\n", runs);
 }
