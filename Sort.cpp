@@ -34,6 +34,7 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 														 _consumed(0), _produced(0), _recsize(1004)
 {
 	TRACE(true);
+	traceprintf("Starting to sort.\n");
 
 	// TODO: hard coding and commenting records generation
 	while (_input->next())
@@ -70,9 +71,9 @@ SortIterator::~SortIterator()
 // external sort
 bool SortIterator::next()
 {
-	TRACE(true);
-	if (_produced >= _consumed)
-		return false;
+
+	// if (_produced >= _consumed)
+	// 	return false;
 
 	ssdSort();
 	externalMerge();
@@ -103,6 +104,8 @@ void SortIterator:: externalMerge() {
 	{
 		dram_merge.read(i);
 	}
+		TRACE(true);
+	    traceprintf("DRAM is loaded with records for external merge.\n");
 
 	//load cache all partitions
 	Cache cache_merge(runs);

@@ -40,7 +40,6 @@ ScanIterator::~ScanIterator()
 
 bool ScanIterator::next()
 {
-	  TRACE(true);
 
 	if (_count >= _plan->_count)
 		return false;
