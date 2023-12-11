@@ -1,4 +1,4 @@
-
+#include <cstdio>
 #include "defs.h"
 #include "Sort.h"
 #include "unistd.h"
@@ -90,6 +90,18 @@ void SortIterator:: ssdSort() {
 	while (ssd_sort_iterator->next()) runs++;
 }
 
+void SortIterator:: clearTempFile() {
+	ofstream tempFile(HDD_OUT_FILE_NAME, ios:: trunc);
+	tempFile.close();
+
+	//rename HDD_OUT2 to HDD_OUT
+	if (rename(HDD_OUT2_FILE_NAME.c_str() , HDD_OUT_FILE_NAME.c_str()) == 0) {
+        cout << "File renamed successfully." << endl;
+    } else {
+        perror("Error renaming file");
+    }
+}
+
 void SortIterator:: externalMerge() {
 	TRACE(true);
 
@@ -121,4 +133,6 @@ void SortIterator:: externalMerge() {
 	ssd_merge.clearSSD();
 	cache_merge.clearCache();
     dram_merge.clearRam();
+	
+	clearTempFile();
 }

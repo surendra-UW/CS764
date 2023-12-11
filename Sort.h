@@ -22,6 +22,7 @@ public:
 	bool next();
 	void ssdSort();
 	void externalMerge();
+	void clearTempFile();
 
 private:
 	SortPlan const *const _plan;
