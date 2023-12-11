@@ -75,7 +75,7 @@ It helps in enabling systems to handle larger workloads that exceed the availabl
 Completed.
 
 ## Contributions:
-Surendra Parla - Spilling from SSD to disk, Spilling memory-to-SSD, Cache-size mini runs, Device-optimized page sizes
-Neha Chadaga - Internal sorting-Quicksort, Verifying sets of rows & values, Verifying sort order
+Surendra Parla - Spilling from SSD to disk, Spilling memory-to-SSD, Cache-size mini runs, Device-optimized page sizes \
+Neha Chadaga - Internal sorting-Quicksort, Verifying sets of rows & values, Verifying sort order \
 Srihari Sridharan - Tournament Tree, Offset Value Coding, Minimum count of row and column comparisons
 
