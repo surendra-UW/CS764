@@ -6,6 +6,7 @@
 #include <set>
 #include <unordered_set>
 #include <limits>
+#include "constants.h"
 #include "Sort.h"
 #include "internal_sort.h"
 
@@ -13,7 +14,7 @@ using namespace std;
 
 
 //Verification of sets of rows and values
-bool verifySets(char *inputFile, char *outputFile) {
+bool verifySets(string inputFile, string outputFile) {
     std::ifstream input(inputFile);
     std::ifstream output(outputFile);
 
@@ -37,9 +38,9 @@ bool verifySets(char *inputFile, char *outputFile) {
     while (std::getline(output, outputRow)) {
         if (inputRows.find(outputRow) == inputRows.end()) {
             std::cerr << "Mismatch found: Row in output file not present in input file." << std::endl;
-            // return false;
+            return false;
         } else {
-            cout<<"Output row is present\n";
+            // cout<<"Output row is present\n";
         }
     }
 
@@ -48,7 +49,7 @@ bool verifySets(char *inputFile, char *outputFile) {
 }
 
 //Verification of Sort order
-bool verifySortOrder(char *outputFile) {
+bool verifySortOrder(string outputFile) {
     std::ifstream output(outputFile);
 
     if (!output.is_open()) {
@@ -75,7 +76,7 @@ bool verifySortOrder(char *outputFile) {
 }
 
 int main(){
-    verifySets("./in/HDD.txt","out/HDD_OUT.txt");
-    verifySortOrder("./out/HDD_OUT2.txt");
+    verifySets(HDD_FILE_NAME, HDD_OUT_FILE_NAME);
+    verifySortOrder(HDD_OUT_FILE_NAME);
     return 0;
 }

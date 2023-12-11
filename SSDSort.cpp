@@ -68,6 +68,7 @@ bool SSDSortIterator::next()
 		externalMerge();
 	else {
 		// move SSD.txt to HDD_out.TXT
+		traceprintf("moving data to output file HDD_OUT\n");
 		appendDataAndTruncate(SSD_FILE_NAME, HDD_OUT_FILE_NAME);
 	}
 	batches = 0;

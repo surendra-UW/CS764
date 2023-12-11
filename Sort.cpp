@@ -10,7 +10,6 @@
 
 using namespace std;
 
-#define HDD_PAGE_SIZE 1024
 
 int recordsize = 0;
 SortPlan::SortPlan(Plan *const input) : _input(input)
@@ -34,14 +33,14 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 														 _consumed(0), _produced(0), _recsize(54)
 {
 	TRACE(true);
-	traceprintf("Starting to sort.\n");
+	traceprintf("Starting to scan records.\n");
 
 	while (_input->next())
 		++_consumed;
 	// _consumed = 3000000;
 	delete _input;
 	
-	ifstream inputFile("HDD.txt", ios::binary | ios::ate);
+	ifstream inputFile(HDD_FILE_NAME, ios::binary | ios::ate);
 	if (!inputFile)
 	{
 		// cout << "cannot open the hard disk" << endl;
@@ -51,7 +50,8 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	_recsize = curr/_consumed;
 	inputFile.close();
 	recordsize = _recsize;
-	// cout<<"record size: "<<recordsize<<endl;
+	
+	traceprintf("record size after delimiters %d\n", recordsize);
 	// initialize
 	runs = 0;
 
@@ -63,9 +63,9 @@ SortIterator::~SortIterator()
 {
 	TRACE(true);
 
-	traceprintf("produced %lu of %lu rows\n",
-				(unsigned long)(_produced),
-				(unsigned long)(_consumed));
+	// traceprintf("produced %lu of %lu rows\n",
+	// 			(unsigned long)(_consumed),
+	// 			(unsigned long)(_consumed));
 } // SortIterator::~SortIterator
 
 // external sort
@@ -75,6 +75,7 @@ bool SortIterator::next()
 	// if (_produced >= _consumed)
 	// 	return false;
 
+	TRACE(true);
 	ssdSort();
 
 	if(runs>1) externalMerge();
