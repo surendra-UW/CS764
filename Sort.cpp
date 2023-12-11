@@ -37,9 +37,9 @@ SortIterator::SortIterator(SortPlan const *const plan) : _plan(plan), _input(pla
 	traceprintf("Starting to sort.\n");
 
 	// TODO: hard coding and commenting records generation
-	while (_input->next())
-		++_consumed;
-	// _consumed = 200000;
+	// while (_input->next())
+	// 	++_consumed;
+	_consumed = 3000000;
 	delete _input;
 
 	// ifstream inputFile("HDD.txt", ios::binary | ios::ate);
@@ -76,8 +76,10 @@ bool SortIterator::next()
 	// if (_produced >= _consumed)
 	// 	return false;
 
-	ssdSort();
-	if(runs>1) externalMerge();
+	// ssdSort();
+	// if(runs>1) 
+	runs = 2;
+	externalMerge();
 	
 	return false;
 } // SortIterator::next
@@ -105,7 +107,7 @@ void SortIterator:: externalMerge() {
 	{
 		dram_merge.read(i);
 	}
-		TRACE(true);
+		// TRACE(true);
 	    traceprintf("DRAM is loaded with records for external merge.\n");
 
 	//load cache all partitions

@@ -53,7 +53,7 @@ co :
 	co $(REV) -l $(HDRS) $(SRCS) $(DOCS) $(SCRS)
 
 clean :
-	@rm -f $(OBJS) data.txt Test.exe Test.exe.stackdump trace ./in/SSD.txt ./in/DRAM.txt
+	@rm -f $(OBJS) data.txt Test.exe Test.exe.stackdump trace 
 
 run: Test.exe
 	./Test.exe

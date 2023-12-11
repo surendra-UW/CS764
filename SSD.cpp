@@ -33,10 +33,10 @@ int SSD::read(int partition)
     }
     uint64_t block_size = records_to_consume*recordsize;
     //partition size to be used in SSD for merge step 
-    uint partition_size = RoundDown(SSD_SIZE_IN_BYTES / _NWAY, recordsize);
+    uint partition_size = RoundDown(0.999*SSD_SIZE_IN_BYTES / _NWAY, recordsize);
 
-    cout<<"dram block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
-    cout<<"seek offsets: dram "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
+    cout<<"ssd block size being read "<<block_size<<"records being consumed "<<records_to_consume<<endl;
+    cout<<"seek offsets: ssd "<<partition_size * partition << " ssd offset "<<readOffsets[partition]<<endl;
 
     ifstream inputFile(HDD_OUT_FILE_NAME);
     fstream ssdFile(SSD_FILE_NAME, ios::in | ios::out);
